@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="../assets/favicon.png" />
+    <title>Sistem Pengecekan Dokumen Excel</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="../css/styles_spdd.css" />
+  </head>
+  <body>
+    <!-- 🌐 NAVBAR -->
+    <nav class="main-nav">
+      <div class="nav-container">
+        <div class="nav-logo">YXF Tools</div>
+        <ul class="nav-links">
+          <li><a href="index.html">Pelaporan Barang</a></li>
+          <li><a href="Extractor.html">Excel Extractor</a></li>
+          <li><a href="sppd.html">Pengecekan Dokumen</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <div class="container py-4">
+      <h1 class="text-center mb-4 fw-bold text-navy">
+        Sistem Pengecekan Draft Dokumen BC 2.7
+      </h1>
+
+      <div class="card p-4 mb-5 shadow-lg">
+        <!-- Upload -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold"
+            >Upload 3 File Excel (Draft, INV, PL)</label
+          >
+          <input type="file" id="files" class="form-control" multiple />
+        </div>
+
+        <div class="mb-3 row">
+          <div class="col-md-12">
+            <label class="form-label fw-semibold">Nama Perusahaan</label>
+            <select id="ptSelect" class="form-select">
+              <option value="">Pilih Perusahaan</option>
+              <option value="0">PT. Bintang Indokarya Gemilang</option>
+              <option value="1">PT. Shoetown Ligung Indonesia</option>
+              <option value="2">PT. Long Rich Indonesia</option>
+              <option value="3">PT. Panarub Industry</option>
+              <option value="4">PT. Yih Quan Footwear Indonesia</option>
+            </select>
+          </div>
+        </div>
+        <!-- Kurs & Valuta -->
+        <div class="row">
+          <div class="col-md-3">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Kurs</label>
+              <input
+                type="number"
+                id="kurs"
+                class="form-control"
+                placeholder="Kurs Mingguan"
+                step="0.0001"
+                readonly
+              />
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Valuta</label>
+              <select id="valutaSelect" class="form-select">
+                <option value="USD" selected>USD</option>
+                <option value="IDR">IDR</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-3 mb-3">
+            <label class="form-label fw-semibold">Jenis Transaksi</label>
+            <select id="jenisTrx" class="form-select">
+              <option value="PENYERAHAN BKP" selected>
+                1 - PENYERAHAN BKP
+              </option>
+              <option value="PENYERAHAN JKP">2 - PENYERAHAN JKP</option>
+              <option value="RETUR">3 - RETUR</option>
+              <option value="NON PENYERAHAN">4 - NON PENYERAHAN</option>
+              <option value="LAINNYA">5 - LAINNYA</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Filter Hasil</label>
+              <select id="filter" class="form-select">
+                <option value="all">Semua</option>
+                <option value="sama">Sama</option>
+                <option value="beda">Beda</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Button -->
+        <button id="btnCheck" class="btn btn-navy fw-bold w-100">
+          Cross Check
+        </button>
+      </div>
+
+      <!-- Hasil -->
+      <h2 class="fw-bold mb-3 text-navy">Hasil Pengecekan</h2>
+      <div class="card shadow-lg">
+        <div class="card-body p-0">
+          <table class="table table-bordered table-hover mb-0" id="resultTable">
+            <thead>
+              <tr>
+                <th>PEMERIKSAAN</th>
+                <th>DRAFT EXIM</th>
+                <th>DATA INV & PL</th>
+                <th>HASIL</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🌙 FOOTER -->
+    <footer class="main-footer">
+      <p>© 2025 YXF Tools — All rights reserved | Made with 💡 by Your Team</p>
+    </footer>
+
+    <!-- Modular JS -->
+    <script src="../js/app.js"></script>
+    <script src="../js/checker.js"></script>
+    <script src="../js/utils.js"></script>
+  </body>
+</html>

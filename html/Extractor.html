@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Excel Extractor</title>
+    <link rel="stylesheet" href="../css/style_extractor.css" />
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  </head>
+  <body>
+    <div class="page-wrapper">
+      <!-- 🌐 NAVBAR -->
+      <nav class="main-nav">
+        <div class="nav-container">
+          <div class="nav-logo">YXF Tools</div>
+          <ul class="nav-links">
+            <li><a href="index.html">Pelaporan Barang</a></li>
+            <li><a href="Extractor.html">Excel Extractor</a></li>
+            <li><a href="sppd.html">Pengecekan Dokumen</a></li>
+          </ul>
+        </div>
+      </nav>
+
+      <!-- 🌐 MAIN CONTENT -->
+      <main>
+        <h1>📊 Excel Extractor</h1>
+
+        <div id="headerCard" class="card">
+          <div class="upload-section">
+            <label class="label-file">Silahkan Inputkan File Excel Anda:</label>
+            <input type="file" id="fileInput" accept=".xls,.xlsx" />
+          </div>
+
+          <h3>HEADER</h3>
+          <div id="headerContent">
+            <em>Belum ada data. Silakan unggah file Excel.</em>
+          </div>
+        </div>
+
+        <div id="barangCard" class="card" style="display: none">
+          <h3>Data Barang</h3>
+          <div id="barangTableWrap" class="preview"></div>
+        </div>
+
+        <div id="ekstraksiCard" class="card" style="display: none">
+          <h3>Data Ekstraksi</h3>
+          <div class="content">
+            <div class="quantity-section">
+              <input
+                type="text"
+                id="quantityInput"
+                placeholder="Masukkan Quantity"
+                name="quantityInput"
+              />
+              <div class="btn-wrap">
+                <button id="applyQuantityBtn">Apply</button>
+                <button id="resetBtn">Reset</button>
+              </div>
+            </div>
+            <div>
+              <label>Pilih Barang:</label>
+              <select id="barangSelect"></select>
+            </div>
+          </div>
+          <div id="ekstraksiTableWrap" class="preview fade-in"></div>
+        </div>
+      </main>
+
+      <!-- 🌙 FOOTER -->
+      <footer class="main-footer">
+        <p>
+          © 2025 YXF Tools — All rights reserved | Made with 💡 by Your Team
+        </p>
+      </footer>
+    </div>
+
+    <script src="../js/script_extractor.js"></script>
+  </body>
+</html>

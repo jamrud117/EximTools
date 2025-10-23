@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Pelaporan Pemasukan Barang</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/style_rp.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script defer src="../js/script_rp.js"></script>
+  </head>
+
+  <body>
+    <div class="page-wrapper">
+      <!-- 🌐 NAVBAR -->
+      <nav class="main-nav">
+        <div class="nav-container">
+          <div class="nav-logo">YXF Tools</div>
+          <ul class="nav-links">
+            <li><a href="index.html">Pelaporan Barang</a></li>
+            <li><a href="Extractor.html">Excel Extractor</a></li>
+            <li><a href="sppd.html">Pengecekan Dokumen</a></li>
+          </ul>
+        </div>
+      </nav>
+
+      <!-- 🌟 MAIN CONTENT -->
+      <main class="container">
+        <header>
+          <div class="logo">YXF</div>
+          <div>
+            <h2>Pelaporan Pemasukan Barang</h2>
+            <p class="subtitle">
+              Upload beberapa file Excel (.xlsx) — Ekstrak & gabungkan menjadi
+              teks siap salin.
+            </p>
+          </div>
+        </header>
+
+        <!-- 🗂️ CARD INPUT -->
+        <div class="card form-card">
+          <div class="form-grid">
+            <div>
+              <label for="files" class="file-label"
+                >📁 Pilih File Excel (.xlsx)</label
+              >
+              <input id="files" type="file" accept=".xlsx" multiple />
+              <div id="fileList">Belum ada file dipilih.</div>
+            </div>
+
+            <div class="input-group">
+              <label for="jenisBarang">Jenis Barang</label>
+              <select id="jenisBarang">
+                <option value="">Pilih Jenis Barang</option>
+                <option value="Insole">INSOLE</option>
+                <option value="Eva Footbed">EVA FOOTBED</option>
+                <option value="Textile">TEXTILE</option>
+                <option value="PU ORTHOLITE">PU ORTHOLITE</option>
+                <option value="Logo">LOGO</option>
+                <option value="Kemasan">KEMASAN</option>
+              </select>
+              <label for="masukTgl" style="margin-top: 5px"
+                >Tanggal Masuk</label
+              >
+              <input id="masukTgl" type="date" />
+            </div>
+          </div>
+
+          <div class="action-buttons">
+            <button id="processBtn" class="btn">Proses</button>
+            <button id="clearBtn" class="btn secondary">Reset</button>
+          </div>
+        </div>
+
+        <!-- 📊 CARD PREVIEW -->
+        <div id="tableWrap" class="card table-card" style="display: none">
+          <h3>📋 Preview Data</h3>
+          <div class="table-container">
+            <table id="previewTable">
+              <thead>
+                <tr>
+                  <th>Nomor Aju</th>
+                  <th>Pengirim</th>
+                  <th>Nomor Pendaftaran</th>
+                  <th>Jumlah Kemasan</th>
+                  <th>Jumlah Barang</th>
+                  <th>Tanggal Dokumen</th>
+                  <th>Nama Barang</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 🧾 CARD HASIL -->
+        <div class="card result-card">
+          <div class="result-header">
+            <strong>🧩 Hasil Teks Siap Copy</strong>
+          </div>
+          <textarea id="result" readonly></textarea>
+          <div class="copy-area">
+            <button id="copyBtn" class="btn secondary">
+              Salin ke Clipboard
+            </button>
+          </div>
+        </div>
+      </main>
+
+      <!-- 🌙 FOOTER -->
+      <footer class="main-footer">
+        <p>
+          © 2025 YXF Tools — All rights reserved | Made with 💡 by Your Team
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>
