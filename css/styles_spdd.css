@@ -41,6 +41,9 @@ body {
   background-color: #f4f6f9;
   color: #333;
 }
+body::-webkit-scrollbar {
+  display: none;
+}
 
 /* Warna khusus */
 .text-navy {

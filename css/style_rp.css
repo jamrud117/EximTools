@@ -18,6 +18,9 @@ body {
   margin: 0;
   background: linear-gradient(180deg, var(--bg), #fff);
 }
+body::-webkit-scrollbar {
+  display: none;
+}
 
 /* Layout */
 .page-wrapper {
@@ -230,7 +233,6 @@ textarea {
   margin-top: 10px;
 }
 
-/* Navbar & Footer */
 /* 🌐 Navbar (Standardized) */
 .main-nav {
   background: #1b2a49;
@@ -286,8 +288,9 @@ textarea {
   background: #1b2a49;
   color: #ccc;
   text-align: center;
-  padding: 14px 0;
+  margin-top: 60px;
   font-size: 14px;
+  letter-spacing: 0.3px;
 }
 
 .result-header {

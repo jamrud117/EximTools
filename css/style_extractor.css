@@ -7,6 +7,9 @@ body {
   height: 100%;
   margin: 0;
 }
+body::-webkit-scrollbar {
+  display: none;
+}
 
 .page-wrapper {
   min-height: 100vh; /* Setinggi layar */
