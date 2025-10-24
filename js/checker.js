@@ -219,8 +219,6 @@ function checkAll(sheetPL, sheetINV, sheetsDATA, kurs, kontrakNo, kontrakTgl) {
   const invInvoiceNo = findInvoiceNo(sheetINV);
   const plInvoiceNo = findInvoiceNo(sheetPL);
 
-  // 🔧 perubahan: fungsi ekstraksi diperbaiki agar bisa baca multiline & hapus teks tambahan
-  // 🔧 ganti isi bagian dalam extractDateFromText()
   function extractDateFromText(text, label = "") {
     if (!text) {
       console.warn(`⚠️ [${label}] tidak ada teks DATE untuk diparse`);
@@ -241,7 +239,6 @@ function checkAll(sheetPL, sheetINV, sheetsDATA, kurs, kontrakNo, kontrakTgl) {
     );
 
     // 2️⃣ Deteksi segmen yang mengandung kata DATE / Invoice Date / Packinglist Date
-    //    Lebih longgar dan mendukung format: "DATE : 17 October 2025 DUE DATE :"
     const segPattern =
       /\b(?:Invoice\s*Date|Packing\s*List\s*Date|Packinglist\s*Date|DATE)\s*[:\-]?\s*([A-Za-z0-9\s,\/\-]+?)(?=(\bDUE\s*DATE\b|\bPO\s*NO\b|\bINVOICE\b|\bNo\s*Kontrak\b|\bTanggal\s*Kontrak\b|$))/i;
 
@@ -272,10 +269,10 @@ function checkAll(sheetPL, sheetINV, sheetsDATA, kurs, kontrakNo, kontrakTgl) {
 
     // 3️⃣ Fallback: cari tanggal umum di seluruh teks
     const globalDatePatterns = [
-      /(\b\d{1,2}\s+[A-Za-z]+\s+\d{4}\b)/, // 17 October 2025
-      /([A-Za-z]+\s+\d{1,2},?\s+\d{4})/, // October 17, 2025
-      /(\b\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}\b)/, // 17-10-2025
-      /(\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2})/, // 2025-10-17
+      /(\b\d{1,2}\s+[A-Za-z]+\s+\d{4}\b)/,
+      /([A-Za-z]+\s+\d{1,2},?\s+\d{4})/,
+      /(\b\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}\b)/,
+      /(\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2})/,
     ];
 
     for (const pat of globalDatePatterns) {
@@ -374,9 +371,9 @@ function checkAll(sheetPL, sheetINV, sheetsDATA, kurs, kontrakNo, kontrakTgl) {
   function findDocDateByCode(sheet, code) {
     const range = XLSX.utils.decode_range(sheet["!ref"]);
     for (let r = range.s.r; r <= range.e.r; r++) {
-      const kode = getCellValueRC(sheet, r, 2); // kolom C = "KODE DOKUMEN"
+      const kode = getCellValueRC(sheet, r, 2);
       if (String(kode).trim() === String(code)) {
-        return parseExcelDate(getCellValueRC(sheet, r, 4)); // kolom E = TANGGAL DOKUMEN
+        return parseExcelDate(getCellValueRC(sheet, r, 4));
       }
     }
     return "";
@@ -412,7 +409,6 @@ function checkAll(sheetPL, sheetINV, sheetsDATA, kurs, kontrakNo, kontrakTgl) {
       }
     }
 
-    // cek fallback: gabung semua teks
     const allText = Object.values(sheet)
       .filter((c) => c && typeof c.v === "string")
       .map((c) => c.v)
@@ -473,9 +469,8 @@ function checkAll(sheetPL, sheetINV, sheetsDATA, kurs, kontrakNo, kontrakTgl) {
   function findDocDateByCode(sheet, code) {
     const range = XLSX.utils.decode_range(sheet["!ref"]);
     for (let r = range.s.r; r <= range.e.r; r++) {
-      const kode = getCellValueRC(sheet, r, 2); // kolom C = "KODE DOKUMEN"
+      const kode = getCellValueRC(sheet, r, 2);
       if (String(kode).trim() === String(code)) {
-        // kolom E = "TANGGAL DOKUMEN"
         return parseExcelDate(getCellValueRC(sheet, r, 4));
       }
     }
@@ -499,8 +494,6 @@ function checkAll(sheetPL, sheetINV, sheetsDATA, kurs, kontrakNo, kontrakTgl) {
   );
 
   // ---------- KONTRAK ----------
-  // Fungsi universal untuk konversi tanggal Excel ke format yyyy-mm-dd
-  // Fungsi universal untuk konversi nilai tanggal menjadi format yyyy-mm-dd
   function parseExcelDate(value) {
     if (!value) return "";
 
@@ -552,8 +545,6 @@ function checkAll(sheetPL, sheetINV, sheetsDATA, kurs, kontrakNo, kontrakTgl) {
         ).padStart(2, "0")}`;
       }
     }
-
-    // ---- Jika tidak cocok, kembalikan aslinya ----
     return d;
   }
 
@@ -601,7 +592,7 @@ function checkAll(sheetPL, sheetINV, sheetsDATA, kurs, kontrakNo, kontrakTgl) {
 
     if (foundPair) return "NPR";
     if (foundPiece) return "PCE";
-    return "NPR"; // Default
+    return "NPR";
   };
 
   const detectedUnit = detectUnitFromPL(sheetPL);
@@ -659,10 +650,10 @@ function checkAll(sheetPL, sheetINV, sheetsDATA, kurs, kontrakNo, kontrakTgl) {
       "Quantity",
       draftQty,
       invQty,
-      qtyMatch && unitMatch, // Sama hanya jika angka & unit sama
+      qtyMatch && unitMatch,
       true,
-      detectedUnit, // Unit hasil deteksi dari PL
-      draftUnit // Unit dari Draft EXIM
+      detectedUnit,
+      draftUnit
     );
 
     const draftNW = getCellValue(sheetsDATA.BARANG, "T" + (r + 1));
