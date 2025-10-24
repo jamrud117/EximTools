@@ -101,8 +101,9 @@ function extractDataFromWorkbook(file, wb) {
   }
 
   const t = getCell(wb, "HEADER", "CF2");
+  const aju = getCell(wb, "HEADER", "A2") || "";
   return {
-    fileName: file.name,
+    aju,
     pengirim,
     bc,
     segel,
@@ -160,9 +161,9 @@ function renderPreview(dataArr) {
     .map(
       (d) => `
       <tr>
-        <td>${d.fileName}</td>
+        <td>${d.aju}</td>
         <td>${d.pengirim}</td>
-        <td>${d.bc}</td>
+        <td>${d.bc || "-"}</td>
         <td>${d.kemasan.qty} ${d.kemasan.unit || ""}</td>
         <td>${d.barang.total} ${d.barang.unit || ""}</td>
         <td>${d.tanggal ? fmtDate(d.tanggal) : ""}</td>

@@ -57,10 +57,15 @@ header {
   font-size: 18px;
   box-shadow: var(--shadow);
 }
+.title {
+  padding: 0 0 26px;
+}
 
 .subtitle {
   color: var(--muted);
   font-size: 13px;
+  height: 0;
+  line-height: 0;
 }
 
 /* Card */
@@ -295,4 +300,7 @@ textarea {
 
 .result-header {
   margin-bottom: 10px;
+}
+header {
+  margin: 0;
 }
