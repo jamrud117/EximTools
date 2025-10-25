@@ -155,18 +155,24 @@ function processWorkbook(wb) {
   attachCopyButtons("barangTableWrap", barangRows);
 
   // DATA EKSTRAKSI
-  const ekstrRows = data.map((r) =>
-    ekstraksiCols.map((c) => {
+  const ekstrRows = data.map((r) => {
+    const cif = parseFloat(r[idx("CIF")]) || 0;
+    const ndpbm = parseFloat(r[idx("NDPBM")]) || 0;
+    const hargaPenyerahan = cif * ndpbm;
+
+    return ekstraksiCols.map((c) => {
       if (c === "KODE DOKUMEN ASAL") return header.dokumen;
       if (c === "KODE KANTOR ASAL") return header.kantor;
       if (c === "NOMOR DAFTAR ASAL") return header.daftar;
       if (c === "TANGGAL DAFTAR ASAL") return header.tanggal;
       if (c === "NOMOR AJU ASAL") return header.nomorAju;
       if (c === "SERI BARANG ASAL") return r[idx("SERI BARANG")] ?? "";
+      if (c === "HARGA PENYERAHAN") return formatNumber(hargaPenyerahan);
+      if (c === "CIF RUPIAH") return 0;
       const i = idx(c);
       return i >= 0 ? r[i] ?? "" : "";
-    })
-  );
+    });
+  });
 
   originalEkstrRows = JSON.parse(JSON.stringify(ekstrRows));
   currentEkstrRows = JSON.parse(JSON.stringify(ekstrRows));
@@ -217,13 +223,12 @@ function applyQuantity() {
 
   const unitPrice = cifAwal / jumlahSatuanAwal;
   const cifNew = unitPrice * qty;
-  const cifRupiah = cifNew * ndpbm;
-  const hargaPenyerahan = cifRupiah;
+  const hargaPenyerahan = cifNew * ndpbm;
+  const cifRupiah = 0;
 
   row[8] = formatNumber(qty);
   row[20] = formatNumber(cifNew);
-  row[21] = cifRupiah.toFixed(2);
-  row[23] = hargaPenyerahan.toFixed(2);
+  row[23] = formatNumber(hargaPenyerahan);
 
   currentEkstrRows[index] = row;
   fadeUpdate(

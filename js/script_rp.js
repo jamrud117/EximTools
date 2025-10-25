@@ -114,37 +114,55 @@ function extractDataFromWorkbook(file, wb) {
   };
 }
 
-// ---------- format tanggal dokumen ----------
+// ---------- format tanggal dokumen (versi cerdas) ----------
 function formatTanggalDokumen(arr) {
   if (!arr.length) return "";
+
+  // Hilangkan duplikat & urutkan
   const sorted = [...new Set(arr.map((t) => t.getTime()))]
     .map((t) => new Date(t))
     .sort((a, b) => a - b);
 
-  const sameMonth = sorted.every(
-    (d) =>
-      d.getMonth() === sorted[0].getMonth() &&
-      d.getFullYear() === sorted[0].getFullYear()
-  );
+  const groups = [];
+  let start = sorted[0];
+  let end = sorted[0];
 
-  if (sorted.length > 1 && sameMonth) {
-    let consecutive = true;
-    for (let i = 1; i < sorted.length; i++) {
-      const diff = (sorted[i] - sorted[i - 1]) / (1000 * 3600 * 24);
-      if (diff !== 1) {
-        consecutive = false;
-        break;
-      }
-    }
-    if (consecutive) {
-      const start = String(sorted[0].getDate()).padStart(2, "0");
-      const end = String(sorted[sorted.length - 1].getDate()).padStart(2, "0");
-      const mm = String(sorted[0].getMonth() + 1).padStart(2, "0");
-      const yy = sorted[0].getFullYear();
-      return `${start}–${end}/${mm}/${yy}`;
+  for (let i = 1; i < sorted.length; i++) {
+    const prev = end;
+    const current = sorted[i];
+    const diff = (current - prev) / (1000 * 3600 * 24);
+
+    if (
+      diff === 1 && // tanggal berurutan
+      current.getMonth() === start.getMonth() &&
+      current.getFullYear() === start.getFullYear()
+    ) {
+      end = current; // masih satu rentang
+    } else {
+      groups.push([start, end]);
+      start = current;
+      end = current;
     }
   }
-  return sorted.map(fmtDate).join(", ");
+  groups.push([start, end]);
+
+  // Format tiap grup
+  const formattedGroups = groups.map(([s, e]) => {
+    const dd1 = String(s.getDate()).padStart(2, "0");
+    const dd2 = String(e.getDate()).padStart(2, "0");
+    const mm = String(s.getMonth() + 1).padStart(2, "0");
+    const yy = s.getFullYear();
+
+    if (s.getTime() === e.getTime()) {
+      // tanggal tunggal
+      return `${dd1}/${mm}/${yy}`;
+    } else {
+      // rentang tanggal berurutan
+      return `${dd1}-${dd2}/${mm}/${yy}`;
+    }
+  });
+
+  return formattedGroups.join(", ");
 }
 
 // ---------- tampilan UI ----------

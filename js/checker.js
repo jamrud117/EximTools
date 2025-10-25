@@ -34,6 +34,21 @@ function applyFilter() {
   });
 }
 
+// ---------- Helper Format Rupiah ----------
+function formatRupiah(value) {
+  if (value == null || value === "" || isNaN(value)) return value;
+
+  const num = Number(value);
+  const hasDecimal = Math.abs(num % 1) > 0;
+
+  // Jika desimal, tampilkan 2 angka di belakang koma, kalau tidak bulatkan saja
+  const formatted = num.toLocaleString("id-ID", {
+    minimumFractionDigits: hasDecimal ? 2 : 0,
+    maximumFractionDigits: hasDecimal ? 2 : 0,
+  });
+  return `Rp. ${formatted}`;
+}
+
 // ---------- Fungsi Utama ----------
 function checkAll(sheetPL, sheetINV, sheetsDATA, kurs, kontrakNo, kontrakTgl) {
   document.querySelector("#resultTable tbody").innerHTML = "";
@@ -155,22 +170,43 @@ function checkAll(sheetPL, sheetINV, sheetsDATA, kurs, kontrakNo, kontrakTgl) {
     cifMatch,
     false
   );
+
+  // ---------- Harga Penyerahan ----------
   const hargaPenyerahan = getCellValue(sheetsDATA.HEADER, "BV2");
+  const hargaPenyerahanCalc = cifSum * kurs;
   addResult(
     "Harga Penyerahan",
-    hargaPenyerahan,
-    cifSum * kurs,
-    isEqual(getCellValue(sheetsDATA.HEADER, "BV2"), cifSum * kurs)
+    formatRupiah(hargaPenyerahan),
+    formatRupiah(hargaPenyerahanCalc),
+    isEqual(hargaPenyerahan, hargaPenyerahanCalc)
   );
 
-  // PPN 11%
+  // ---------- PPN 11% ----------
   const dasarPengenaanPajak = getCellValue(sheetsDATA.HEADER, "BY2");
+  const ppnCalc = cifSum * kurs * 0.11;
   addResult(
     "PPN 11%",
-    dasarPengenaanPajak,
-    cifSum * kurs * 0.11,
-    Math.abs((dasarPengenaanPajak || 0) - cifSum * kurs * 0.11) < 0.01
+    formatRupiah(dasarPengenaanPajak),
+    formatRupiah(ppnCalc),
+    Math.abs((dasarPengenaanPajak || 0) - ppnCalc) < 0.01
   );
+
+  // const hargaPenyerahan = getCellValue(sheetsDATA.HEADER, "BV2");
+  // addResult(
+  //   "Harga Penyerahan",
+  //   hargaPenyerahan,
+  //   cifSum * kurs,
+  //   isEqual(getCellValue(sheetsDATA.HEADER, "BV2"), cifSum * kurs)
+  // );
+
+  // // PPN 11%
+  // const dasarPengenaanPajak = getCellValue(sheetsDATA.HEADER, "BY2");
+  // addResult(
+  //   "PPN 11%",
+  //   dasarPengenaanPajak,
+  //   cifSum * kurs * 0.11,
+  //   Math.abs((dasarPengenaanPajak || 0) - cifSum * kurs * 0.11) < 0.01
+  // );
 
   // ---------- KEMASAN ----------
   const mapUnit = (u) => {
