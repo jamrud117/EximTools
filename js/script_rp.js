@@ -29,6 +29,10 @@ async function readWorkbook(file) {
     reader.readAsArrayBuffer(file);
   });
 }
+const fmtNum = (n) =>
+  typeof n === "number"
+    ? n.toLocaleString("id-ID")
+    : Number(n || 0).toLocaleString("id-ID");
 
 // ---------- ekstraksi data ----------
 function getCell(wb, sheet, addr) {
@@ -182,7 +186,7 @@ function renderPreview(dataArr) {
         <td>${d.aju}</td>
         <td>${d.pengirim}</td>
         <td>${d.bc || "-"}</td>
-        <td>${d.kemasan.qty} ${d.kemasan.unit || ""}</td>
+        <td>${fmtNum(d.kemasan.qty)} ${d.kemasan.unit || ""}</td>
         <td>${d.barang.total} ${d.barang.unit || ""}</td>
         <td>${d.tanggal ? fmtDate(d.tanggal) : ""}</td>
         <td>${
@@ -217,10 +221,10 @@ function generateResultText(dataArr) {
   });
 
   const kemasanText = Object.entries(kemasanMap)
-    .map(([u, q]) => `${q} ${u}`)
+    .map(([u, q]) => `${fmtNum(q)} ${u}`)
     .join(" + ");
   const barangText = Object.entries(barangMap)
-    .map(([u, q]) => `${q} ${u}`)
+    .map(([u, q]) => `${fmtNum(q)} ${u}`)
     .join(" + ");
   const tanggalDoc = formatTanggalDokumen(tanggalArr);
   const masukTxt = fmtDate(new Date($("masukTgl").value));
