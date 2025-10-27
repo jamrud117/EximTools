@@ -93,19 +93,29 @@ function checkAll(sheetPL, sheetINV, sheetsDATA, kurs, kontrakNo, kontrakTgl) {
 
   const findInvoiceNo = (sheet) => {
     const range = XLSX.utils.decode_range(sheet["!ref"]);
+    // Tambahkan keyword yang ingin dicari
+    const keywords = ["INVOICE NO", "PACKINGLIST NO", "PACKING LIST NO"];
+
     for (let R = range.s.r; R <= range.e.r; ++R) {
       for (let C = range.s.c; C <= range.e.c; ++C) {
         const cell = sheet[XLSX.utils.encode_cell({ r: R, c: C })];
-        if (
-          cell &&
-          typeof cell.v === "string" &&
-          cell.v.toUpperCase().includes("INVOICE NO")
-        ) {
-          const lines = cell.v.split(/\r?\n/);
-          for (const line of lines) {
-            if (line.toUpperCase().includes("INVOICE NO")) {
-              const parts = line.split(":");
-              if (parts.length > 1) return parts[1].trim();
+        if (cell && typeof cell.v === "string") {
+          const cellText = cell.v.toUpperCase();
+
+          // Jika cell mengandung salah satu keyword
+          if (keywords.some((key) => cellText.includes(key))) {
+            const lines = cell.v.split(/\r?\n/);
+            for (const line of lines) {
+              // Cek tiap baris apakah ada keyword
+              const foundKey = keywords.find((key) =>
+                line.toUpperCase().includes(key)
+              );
+              if (foundKey) {
+                const parts = line.split(":");
+                if (parts.length > 1) {
+                  return parts[1].trim();
+                }
+              }
             }
           }
         }
@@ -191,23 +201,6 @@ function checkAll(sheetPL, sheetINV, sheetsDATA, kurs, kontrakNo, kontrakTgl) {
     Math.abs((dasarPengenaanPajak || 0) - ppnCalc) < 0.01
   );
 
-  // const hargaPenyerahan = getCellValue(sheetsDATA.HEADER, "BV2");
-  // addResult(
-  //   "Harga Penyerahan",
-  //   hargaPenyerahan,
-  //   cifSum * kurs,
-  //   isEqual(getCellValue(sheetsDATA.HEADER, "BV2"), cifSum * kurs)
-  // );
-
-  // // PPN 11%
-  // const dasarPengenaanPajak = getCellValue(sheetsDATA.HEADER, "BY2");
-  // addResult(
-  //   "PPN 11%",
-  //   dasarPengenaanPajak,
-  //   cifSum * kurs * 0.11,
-  //   Math.abs((dasarPengenaanPajak || 0) - cifSum * kurs * 0.11) < 0.01
-  // );
-
   // ---------- KEMASAN ----------
   const mapUnit = (u) => {
     if (!u) return "";
@@ -215,6 +208,8 @@ function checkAll(sheetPL, sheetINV, sheetsDATA, kurs, kontrakNo, kontrakTgl) {
     if (val.includes("POLYBAG")) return "BG";
     if (val.includes("BOX")) return "BX";
     if (val.includes("CARTON")) return "CT";
+    if (val.includes("ROLL")) return "RO";
+    if (val.includes("SHEET")) return "ST";
     return val;
   };
 

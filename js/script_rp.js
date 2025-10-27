@@ -66,8 +66,44 @@ function extractDataFromWorkbook(file, wb) {
   const pengirim = getEntitas(wb);
   const bc = getCell(wb, "HEADER", "CP2") || "";
   const segel = getCell(wb, "HEADER", "CN2") || "";
-  const kemUnit = getCell(wb, "KEMASAN", "C2");
-  const kemQty = Number(getCell(wb, "KEMASAN", "D2")) || 0;
+  // ---- ambil semua data kemasan ----
+  const sheetKemasan = wb.Sheets["KEMASAN"];
+  let kemasanMap = {};
+
+  if (sheetKemasan && sheetKemasan["!ref"]) {
+    const dataKemasan = XLSX.utils.sheet_to_json(sheetKemasan, { header: 1 });
+    const header = dataKemasan[0] || [];
+    let kodeIdx = -1,
+      jumlahIdx = -1;
+
+    // cari kolom berdasarkan nama header
+    for (let i = 0; i < header.length; i++) {
+      const val = String(header[i] || "")
+        .trim()
+        .toUpperCase();
+      if (val === "KODE KEMASAN") kodeIdx = i;
+      if (val === "JUMLAH KEMASAN") jumlahIdx = i;
+    }
+
+    // fallback jika header tidak ditemukan (anggap C=kode, D=jumlah)
+    if (kodeIdx === -1) kodeIdx = 2;
+    if (jumlahIdx === -1) jumlahIdx = 3;
+
+    // iterasi semua baris data (mulai dari baris ke-2)
+    for (let r = 1; r < dataKemasan.length; r++) {
+      const kode = String(dataKemasan[r][kodeIdx] || "").trim();
+      const qty = Number(dataKemasan[r][jumlahIdx]) || 0;
+      if (!kode) continue;
+      kemasanMap[kode] = (kemasanMap[kode] || 0) + qty;
+    }
+  }
+
+  // jika ada beberapa jenis kemasan, ambil semuanya
+  const kemUnit = Object.keys(kemasanMap).length
+    ? Object.keys(kemasanMap)[0]
+    : "";
+  const kemQty = kemasanMap[kemUnit] || 0;
+
   const barangUnit = getCell(wb, "BARANG", "J2");
   let barangTotal = 0;
   let namaBarang = [];
@@ -111,7 +147,7 @@ function extractDataFromWorkbook(file, wb) {
     pengirim,
     bc,
     segel,
-    kemasan: { unit: kemUnit, qty: kemQty },
+    kemasan: kemasanMap,
     barang: { unit: barangUnit, total: barangTotal },
     tanggal: t ? new Date(t) : null,
     namaBarang, // simpan sebagai array
@@ -211,9 +247,11 @@ function generateResultText(dataArr) {
   const tanggalArr = [];
 
   dataArr.forEach((d) => {
-    if (d.kemasan.unit)
-      kemasanMap[d.kemasan.unit] =
-        (kemasanMap[d.kemasan.unit] || 0) + d.kemasan.qty;
+    if (d.kemasan && typeof d.kemasan === "object") {
+      for (const [unit, qty] of Object.entries(d.kemasan)) {
+        kemasanMap[unit] = (kemasanMap[unit] || 0) + qty;
+      }
+    }
     if (d.barang.unit)
       barangMap[d.barang.unit] =
         (barangMap[d.barang.unit] || 0) + d.barang.total;
