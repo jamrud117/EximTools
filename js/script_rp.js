@@ -222,8 +222,10 @@ function renderPreview(dataArr) {
         <td>${d.aju}</td>
         <td>${d.pengirim}</td>
         <td>${d.bc || "-"}</td>
-        <td>${fmtNum(d.kemasan.qty)} ${d.kemasan.unit || ""}</td>
-        <td>${d.barang.total} ${d.barang.unit || ""}</td>
+        <td>${Object.entries(d.kemasan)
+          .map(([unit, qty]) => `${fmtNum(qty)} ${unit}`)
+          .join("<br>")}</td>
+        <td>${fmtNum(d.barang.total)} ${d.barang.unit || ""}</td>
         <td>${d.tanggal ? fmtDate(d.tanggal) : ""}</td>
         <td>${
           d.namaBarang && d.namaBarang.length ? d.namaBarang.join("<br>") : "-"
