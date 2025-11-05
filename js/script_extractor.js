@@ -15,6 +15,7 @@ const barangCols = [
   "NETTO",
   "BRUTO",
   "CIF",
+  "CIF RUPIAH",
   "NDPBM",
   "HARGA PENYERAHAN",
 ];
@@ -155,10 +156,21 @@ function processWorkbook(wb) {
   attachCopyButtons("barangTableWrap", barangRows);
 
   // DATA EKSTRAKSI
+  // DATA EKSTRAKSI (dengan logika CIF=0 → Harga Penyerahan, NDPBM default 1, CIF Rupiah dari Excel)
   const ekstrRows = data.map((r) => {
-    const cif = parseFloat(r[idx("CIF")]) || 0;
-    const ndpbm = parseFloat(r[idx("NDPBM")]) || 0;
-    const hargaPenyerahan = cif * ndpbm;
+    const cifExcel = parseFloat(r[idx("CIF")]) || 0;
+    const ndpbmExcel = parseFloat(r[idx("NDPBM")]) || 0;
+    const hargaExcel = parseFloat(r[idx("HARGA PENYERAHAN")]) || 0;
+    const cifRupiahExcel = parseFloat(r[idx("CIF RUPIAH")]) || 0;
+
+    // Default NDPBM = 1 jika 0
+    const ndpbm = ndpbmExcel === 0 ? 1 : ndpbmExcel;
+
+    // Jika CIF Excel = 0 → pakai Harga Penyerahan dari Excel
+    const cifFinal = cifExcel === 0 ? hargaExcel : cifExcel;
+
+    // Jika CIF Excel = 0 → Harga Penyerahan juga = harga Excel
+    const hargaFinal = cifExcel === 0 ? hargaExcel : cifExcel * ndpbm;
 
     return ekstraksiCols.map((c) => {
       if (c === "KODE DOKUMEN ASAL") return header.dokumen;
@@ -167,8 +179,15 @@ function processWorkbook(wb) {
       if (c === "TANGGAL DAFTAR ASAL") return header.tanggal;
       if (c === "NOMOR AJU ASAL") return header.nomorAju;
       if (c === "SERI BARANG ASAL") return r[idx("SERI BARANG")] ?? "";
-      if (c === "HARGA PENYERAHAN") return formatNumber(hargaPenyerahan);
-      if (c === "CIF RUPIAH") return 0;
+
+      if (c === "CIF") return formatNumber(cifFinal);
+      if (c === "HARGA PENYERAHAN") return formatNumber(hargaFinal);
+
+      // Ambil CIF Rupiah dari Excel, jangan 0
+      if (c === "CIF RUPIAH") return formatNumber(cifRupiahExcel);
+
+      if (c === "NDPBM") return formatNumber(ndpbm);
+
       const i = idx(c);
       return i >= 0 ? r[i] ?? "" : "";
     });
@@ -217,20 +236,25 @@ function applyQuantity() {
   if (isNaN(qty)) return alert("Masukkan quantity valid!");
 
   const row = [...currentEkstrRows[index]];
-  const jumlahSatuanAwal = parseFloat(row[8]) || 1;
+  const qtyAwal = parseFloat(row[8]) || 1;
   const cifAwal = parseFloat(row[20]) || 0;
-  const ndpbm = parseFloat(row[22]) || 0;
+  const cifRupiahAwal = parseFloat(row[21]) || 0;
+  const ndpbm = parseFloat(row[22]) || 1;
 
-  const unitPrice = cifAwal / jumlahSatuanAwal;
-  const cifNew = unitPrice * qty;
-  const hargaPenyerahan = cifNew * ndpbm;
-  const cifRupiah = 0;
+  const unitCIF = cifAwal / qtyAwal;
+  const unitCIFRupiah = cifRupiahAwal / qtyAwal;
+
+  const cifBaru = unitCIF * qty;
+  const cifRupiahBaru = unitCIFRupiah * qty;
+  const hargaPenyerahanBaru = cifBaru * ndpbm;
 
   row[8] = formatNumber(qty);
-  row[20] = formatNumber(cifNew);
-  row[23] = formatNumber(hargaPenyerahan);
+  row[20] = formatNumber(cifBaru);
+  row[21] = formatNumber(cifRupiahBaru);
+  row[23] = formatNumber(hargaPenyerahanBaru);
 
   currentEkstrRows[index] = row;
+
   fadeUpdate(
     document.getElementById("ekstraksiTableWrap"),
     buildTable(ekstraksiCols, [row]),
