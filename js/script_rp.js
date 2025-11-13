@@ -65,7 +65,7 @@ function getEntitas(wb) {
 function extractDataFromWorkbook(file, wb) {
   const pengirim = getEntitas(wb);
   const bc = getCell(wb, "HEADER", "CP2") || "";
-  const segel = getCell(wb, "HEADER", "CN2") || "";
+  const segel = getCell(wb, "HEADER", "BC2") || "";
   // ---- ambil semua data kemasan ----
   const sheetKemasan = wb.Sheets["KEMASAN"];
   let kemasanMap = {};
