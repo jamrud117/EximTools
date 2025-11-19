@@ -123,6 +123,8 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     await processFiles(files);
+    document.getElementById("filter").value = "beda";
+    applyFilter();
   });
 
   // Filter hasil

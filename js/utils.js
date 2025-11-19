@@ -231,24 +231,68 @@ function extractKontrakInfoFromPL(sheetPL) {
     for (let C = range.s.c; C <= range.e.c; ++C) {
       const cell = sheetPL[XLSX.utils.encode_cell({ r: R, c: C })];
       if (!cell || typeof cell.v !== "string") continue;
-      const val = cell.v.trim();
 
-      // cari "No. Kontrak : <isi>"
-      if (/No\.?\s*Kontrak/i.test(val)) {
-        const matchNo = val.match(/No\.?\s*Kontrak\s*[:\-]?\s*([^\n\r]+)/i);
-        if (matchNo) kontrakNo = matchNo[1].trim();
+      // Normalisasi & pisah per-baris (multiline cell)
+      const lines = cell.v
+        .replace(/\r/g, "")
+        .split("\n")
+        .map((l) => l.trim())
+        .filter((l) => l.length > 0);
+
+      // ───────────────────────────────────────────────────
+      // 🔥 1) SCAN PER BARIS
+      // ───────────────────────────────────────────────────
+      for (const line of lines) {
+        // No. Kontrak
+        if (/No\.?\s*Kontrak/i.test(line)) {
+          const m = line.match(/No\.?\s*Kontrak\s*[:\-]?\s*(.*)/i);
+          if (m) kontrakNo = m[1].trim();
+        }
+
+        // Tanggal Kontrak
+        if (/Tanggal\s*Kontrak/i.test(line)) {
+          const m = line.match(/Tanggal\s*Kontrak\s*[:\-]?\s*(.*)/i);
+          if (m) {
+            let raw = m[1].trim();
+
+            const dmatch = raw.match(
+              /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/
+            );
+            if (dmatch) {
+              const [_, d, mo, y] = dmatch;
+              const yyyy = y.length === 2 ? "20" + y : y;
+              raw = `${yyyy}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}`;
+            }
+            kontrakTgl = raw;
+          }
+        }
       }
 
-      // cari "Tanggal Kontrak : <isi>"
-      if (/Tanggal\s*Kontrak/i.test(val)) {
-        const matchTgl = val.match(/Tanggal\s*Kontrak\s*[:\-]?\s*([^\n\r]+)/i);
-        if (matchTgl) {
-          let raw = matchTgl[1].trim();
+      // ───────────────────────────────────────────────────
+      // 🔥 2) EXTRA HANDLER:
+      // Jika No Kontrak & Tanggal Kontrak ada dalam satu CELL
+      // sejajar seperti:
+      // "No. Kontrak : XXX   Tanggal Kontrak : DD-MM-YYYY"
+      // ───────────────────────────────────────────────────
+      const val = cell.v.replace(/\s+/g, " ").trim();
 
-          // ubah format dd-mm-yyyy → yyyy-mm-dd
-          const m = raw.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{2,4})$/);
-          if (m) {
-            const [_, d, mo, y] = m;
+      if (/No\.?\s*Kontrak/i.test(val) && /Tanggal\s*Kontrak/i.test(val)) {
+        // Ambil No Kontrak
+        const mNo = val.match(
+          /No\.?\s*Kontrak\s*[:\-]?\s*([^:]+?)(?=Tanggal\s*Kontrak|$)/i
+        );
+        if (mNo) kontrakNo = mNo[1].trim();
+
+        // Ambil Tanggal Kontrak
+        const mTgl = val.match(
+          /Tanggal\s*Kontrak\s*[:\-]?\s*([A-Za-z0-9\/\-\s]+)/i
+        );
+        if (mTgl) {
+          let raw = mTgl[1].trim();
+
+          const dmatch = raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+          if (dmatch) {
+            const [_, d, mo, y] = dmatch;
             const yyyy = y.length === 2 ? "20" + y : y;
             raw = `${yyyy}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}`;
           }
