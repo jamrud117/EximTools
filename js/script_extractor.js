@@ -6,9 +6,10 @@ document.querySelectorAll(".nav-links a").forEach((link) => {
 });
 
 const barangCols = [
-  "SERI BARANG",
+  "NO",
   "HS",
   "KODE BARANG",
+  "SERI BARANG",
   "URAIAN",
   "KODE SATUAN",
   "JUMLAH SATUAN",
@@ -144,8 +145,11 @@ function processWorkbook(wb) {
   const idx = (n) =>
     headers.findIndex((h) => (h || "").toUpperCase().trim() === n);
 
-  const barangRows = data.map((r) =>
-    barangCols.map((c) => (idx(c) >= 0 ? r[idx(c)] ?? "" : ""))
+  const barangRows = data.map((r, i) =>
+    barangCols.map((c) => {
+      if (c === "NO") return i + 1; // ← otomatis isi nomor urut
+      return idx(c) >= 0 ? r[idx(c)] ?? "" : "";
+    })
   );
 
   document.getElementById("barangCard").style.display = "block";
