@@ -1,0 +1,28 @@
+{
+  "PT. Shoetown Ligung Indonesia": {
+    "kode": "STYLE",
+    "uraian": "ITEM NAME",
+    "qty": "QTY",
+    "cif": "AMOUNT",
+    "suratjalan": "SURAT JALAN"
+  },
+  "PT. Bintang Indokarya Gemilang": {
+    "kode": "MATERIAL CODE CUSTOMER",
+    "uraian": "ITEM NAME",
+    "qty": "QTY",
+    "cif": "AMOUNT",
+    "suratjalan": "SURAT JALAN"
+  },
+  "PT. Long Rich Indonesia": {
+    "kode": "STYLE.NO",
+    "uraian": "ITEM NAME",
+    "qty": "QTY",
+    "cif": "AMOUNT"
+  },
+  "PT. Yih Quan Footwear Indonesia": {
+    "kode": "SKU",
+    "uraian": "ITEM NAME",
+    "qty": "QTY",
+    "cif": "AMOUNT"
+  }
+}

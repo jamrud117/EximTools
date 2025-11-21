@@ -77,19 +77,10 @@ function checkAll(sheetPL, sheetINV, sheetsDATA, kurs, kontrakNo, kontrakTgl) {
   const ptSelect = document.getElementById("ptSelect");
   const selectedPT = ptSelect.options[ptSelect.selectedIndex]?.text || "";
 
-  const invCols = findHeaderColumns(sheetINV, {
-    kode: selectedPT.includes("Shoetown")
-      ? "STYLE"
-      : selectedPT.includes("Long Rich")
-      ? "STYLE.NO"
-      : selectedPT.includes("Yih Quan")
-      ? "SKU"
-      : "MATERIAL CODE CUSTOMER",
-    uraian: "ITEM NAME",
-    qty: "QTY",
-    cif: "AMOUNT",
-    suratjalan: "SURAT JALAN",
-  });
+  let selectedName = document.getElementById("ptSelect").value;
+  let config = mappings[selectedName] || mappings["Default"];
+
+  const invCols = findHeaderColumns(sheetINV, config);
 
   const findInvoiceNo = (sheet) => {
     const range = XLSX.utils.decode_range(sheet["!ref"]);

@@ -1,3 +1,21 @@
+let mappings = {};
+
+async function loadMappings() {
+  const local = localStorage.getItem("customerMappings");
+  if (local) {
+    mappings = JSON.parse(local);
+    return;
+  }
+
+  try {
+    const res = await fetch("mapping.json");
+    mappings = await res.json();
+  } catch (e) {
+    console.error("Gagal load mapping.json");
+  }
+}
+loadMappings();
+
 const currentPage = window.location.pathname.split("/").pop();
 document.querySelectorAll(".nav-links a").forEach((link) => {
   if (link.getAttribute("href") === currentPage) {

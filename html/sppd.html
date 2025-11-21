@@ -20,6 +20,9 @@
           <li><a href="../index.html">Pelaporan Barang</a></li>
           <li><a href="Extractor.html">Excel Extractor</a></li>
           <li><a href="sppd.html">Pengecekan Dokumen</a></li>
+          <li>
+            <a href="mapping-admin.html">Tambah Customer</a>
+          </li>
         </ul>
       </div>
     </nav>
@@ -133,5 +136,31 @@
     <script src="../js/app.js"></script>
     <script src="../js/checker.js"></script>
     <script src="../js/utils.js"></script>
+    <script>
+      async function loadPTDropdown() {
+        let saved = localStorage.getItem("customerMappings");
+        let mappings = {};
+
+        if (saved) {
+          mappings = JSON.parse(saved);
+        } else {
+          try {
+            const res = await fetch("mapping.json");
+            mappings = await res.json();
+          } catch (e) {
+            console.error("Gagal load mapping.json", e);
+          }
+        }
+
+        const ptSelect = document.getElementById("ptSelect");
+        ptSelect.innerHTML = `<option value="">Pilih Perusahaan</option>`;
+
+        Object.keys(mappings).forEach((pt) => {
+          ptSelect.innerHTML += `<option value="${pt}">${pt}</option>`;
+        });
+      }
+
+      loadPTDropdown();
+    </script>
   </body>
 </html>
