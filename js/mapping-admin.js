@@ -8,14 +8,36 @@ function load() {
 
 function saveMapping() {
   const pt = document.getElementById("mapPT").value.trim();
-  if (!pt) return alert("Nama customer wajib diisi!");
+  const code = document.getElementById("mapKode").value.trim();
+  const uraian = document.getElementById("mapUraian").value.trim();
+  const qty = document.getElementById("mapQty").value.trim();
+  const cif = document.getElementById("mapCIF").value.trim();
+  const suratjalan = document.getElementById("mapSJ").value.trim();
 
+  // VALIDASI GENERIK — semua field wajib diisi
+  const fields = [
+    { value: pt, label: "Nama customer" },
+    { value: code, label: "Code customer" },
+    { value: uraian, label: "Nama item customer" },
+    { value: qty, label: "Header quantity customer" },
+    { value: cif, label: "Header CIF customer" },
+    { value: suratjalan, label: "Header surat jalan customer" },
+  ];
+
+  const emptyField = fields.find((f) => !f.value || f.value.trim() === "");
+
+  if (emptyField) {
+    alert(`${emptyField.label} wajib diisi!`);
+    return; // stop proses
+  }
+
+  // Jika semua terisi → simpan mapping
   mappings[pt] = {
-    kode: document.getElementById("mapKode").value.trim(),
-    uraian: document.getElementById("mapUraian").value.trim(),
-    qty: document.getElementById("mapQty").value.trim(),
-    cif: document.getElementById("mapCIF").value.trim(),
-    suratjalan: document.getElementById("mapSJ").value.trim(),
+    kode: code,
+    uraian: uraian,
+    qty: qty,
+    cif: cif,
+    suratjalan: suratjalan,
   };
 
   localStorage.setItem("customerMappings", JSON.stringify(mappings));
