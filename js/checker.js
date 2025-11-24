@@ -1,4 +1,3 @@
-// ---------- Helper Tabel Hasil ----------
 function addResult(
   check,
   value,
@@ -8,6 +7,24 @@ function addResult(
   unitForRef = "",
   unitForData = undefined
 ) {
+  // --- KHUSUS NPWP: tampilkan RAW, jangan formatValue ---
+  if (String(check).toUpperCase() === "NPWP") {
+    const tbody = document.querySelector("#resultTable tbody");
+    const row = document.createElement("tr");
+
+    row.innerHTML = `
+      <td>${check}</td>
+      <td>${value ?? ""}</td>
+      <td>${ref ?? ""}</td>
+      <td>${isMatch ? "Sama" : "Beda"}</td>
+    `;
+
+    row.classList.add(isMatch ? "match" : "mismatch");
+    tbody.appendChild(row);
+    return; // hentikan proses agar tidak lewat formatValue()
+  }
+  // --- END KHUSUS NPWP ---
+
   if (unitForData === undefined) unitForData = unitForRef;
   const tbody = document.querySelector("#resultTable tbody");
   const row = document.createElement("tr");
@@ -155,6 +172,13 @@ function checkAll(sheetPL, sheetINV, sheetsDATA, kurs, kontrakNo, kontrakTgl) {
 
   const isMatchTrx = jenisTransaksi.toUpperCase() === selectedTrx.toUpperCase();
   addResult("Jenis Transaksi", jenisTransaksi, selectedTrx, isMatchTrx);
+
+  // ---------- NPWP CHECK ----------
+  const npwpDraft = getNPWPDraft(sheetsDATA);
+  const npwpRef = config.npwp || localStorage.getItem("npwp") || "";
+  const npwpMatch = String(npwpDraft) === String(npwpRef);
+
+  addResult("NPWP", npwpDraft, npwpRef, npwpMatch);
 
   // Harga Penyerahan & Valuta
   const valuta = (getCellValue(sheetsDATA.HEADER, "CI2") || "").toUpperCase();

@@ -4,25 +4,29 @@
     "uraian": "ITEM NAME",
     "qty": "QTY",
     "cif": "AMOUNT",
-    "suratjalan": "SURAT JALAN"
+    "suratjalan": "SURAT JALAN",
+    "npwp": "0769849761451000000000"
   },
   "PT. Bintang Indokarya Gemilang": {
     "kode": "MATERIAL CODE CUSTOMER",
     "uraian": "ITEM NAME",
     "qty": "QTY",
     "cif": "AMOUNT",
-    "suratjalan": "SURAT JALAN"
+    "suratjalan": "SURAT JALAN",
+    "npwp": "0029884624501000000000"
   },
   "PT. Long Rich Indonesia": {
     "kode": "STYLE.NO",
     "uraian": "ITEM NAME",
     "qty": "QTY",
-    "cif": "AMOUNT"
+    "cif": "AMOUNT",
+    "npwp": "0735239725451000000000"
   },
   "PT. Yih Quan Footwear Indonesia": {
     "kode": "SKU",
     "uraian": "ITEM NAME",
     "qty": "QTY",
-    "cif": "AMOUNT"
+    "cif": "AMOUNT",
+    "npwp": "0433722683501000000000"
   }
 }

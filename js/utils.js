@@ -305,3 +305,72 @@ function extractKontrakInfoFromPL(sheetPL) {
 
   return { kontrakNo, kontrakTgl };
 }
+function getNPWPDraft(sheetsDATA) {
+  const sheet =
+    sheetsDATA.ENTITAS || sheetsDATA.HDR_ENTITAS || sheetsDATA.entitas;
+
+  if (!sheet) return "";
+
+  const range = XLSX.utils.decode_range(sheet["!ref"]);
+  let colKode = null,
+    colIdentitas = null;
+
+  // Cari kolom
+  for (let c = range.s.c; c <= range.e.c; c++) {
+    const cell = sheet[XLSX.utils.encode_cell({ r: 0, c })];
+    if (!cell) continue;
+
+    const header = String(cell.v).toUpperCase();
+    if (header.includes("KODE ENTITAS")) colKode = c;
+    if (header.includes("NOMOR IDENTITAS")) colIdentitas = c;
+  }
+
+  if (colKode === null || colIdentitas === null) return "";
+
+  // Cari baris dengan KODE ENTITAS = 8
+  for (let r = 1; r <= range.e.r; r++) {
+    const kode = getCellValueRC(sheet, r, colKode);
+    if (String(kode).trim() === "8") {
+      let raw = getCellValueRC(sheet, r, colIdentitas);
+
+      // AUTO-FIX NPWP
+      return fixNpwp(raw);
+    }
+  }
+
+  return "";
+}
+
+function fixNpwp(raw) {
+  if (!raw) return "";
+
+  // Convert to string
+  let s = String(raw).trim();
+
+  // Case 1 — scientific notation (misal 7.698498e+21)
+  if (/e\+/i.test(s)) {
+    try {
+      // Gunakan BigInt untuk menjaga seluruh digit
+      const big = BigInt(Number(raw).toFixed(0));
+      s = big.toString();
+    } catch (e) {
+      // fallback
+      s = String(Number(raw));
+    }
+  }
+
+  // Case 2 — bersihkan non-digit
+  s = s.replace(/[^0-9]/g, "");
+
+  // Case 3 — jika digit kurang dari 22, tambahkan leading zero
+  if (s.length < 22) {
+    s = s.padStart(22, "0");
+  }
+
+  // Case 4 — jika digit lebih panjang (jarang terjadi), ambil 22 digit terakhir
+  if (s.length > 22) {
+    s = s.slice(-22);
+  }
+
+  return s;
+}

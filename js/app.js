@@ -59,6 +59,7 @@ async function processFiles(files) {
           DOKUMEN: wb.Sheets["DOKUMEN"],
           KEMASAN: wb.Sheets["KEMASAN"],
           BARANG: wb.Sheets["BARANG"],
+          ENTITAS: wb.Sheets["ENTITAS"],
         };
       }
     });
