@@ -46,17 +46,17 @@
         <input id="mapCIF" class="form-control mb-2" />
 
         <label class="mb-2">Surat Jalan</label>
-        <input id="mapSJ" class="form-control mb-5" />
+        <input id="mapSJ" class="form-control mb-3" />
 
-        <button class="btn btn-primary mb-3" onclick="saveMapping()">
-          Simpan Mapping
-        </button>
-        <button class="btn btn-secondary mb-3" onclick="exportMapping()">
-          Export JSON
-        </button>
-        <button class="btn btn-dark" onclick="importMapping()">
-          Import JSON
-        </button>
+        <div class="button-wrapper">
+          <button class="btn btn-success" onclick="saveMapping()">Save</button>
+          <button class="btn btn-danger" onclick="exportMapping()">
+            Export JSON
+          </button>
+          <button class="btn btn-primary" onclick="importMapping()">
+            Import JSON
+          </button>
+        </div>
       </div>
 
       <h4>Mapping Saat Ini</h4>
