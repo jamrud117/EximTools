@@ -21,9 +21,8 @@ function addResult(
 
     row.classList.add(isMatch ? "match" : "mismatch");
     tbody.appendChild(row);
-    return; // hentikan proses agar tidak lewat formatValue()
+    return;
   }
-  // --- END KHUSUS NPWP ---
 
   if (unitForData === undefined) unitForData = unitForRef;
   const tbody = document.querySelector("#resultTable tbody");
@@ -92,12 +91,18 @@ function checkAll(sheetPL, sheetINV, sheetsDATA, kurs, kontrakNo, kontrakTgl) {
   // ---------- Data INV ----------
   const rangeINV = XLSX.utils.decode_range(sheetINV["!ref"]);
   const ptSelect = document.getElementById("ptSelect");
-  const selectedPT = ptSelect.options[ptSelect.selectedIndex]?.text || "";
+  const mappings = JSON.parse(localStorage.getItem("companyMappings")) || {};
 
-  let selectedName = document.getElementById("ptSelect").value;
-  let config = mappings[selectedName] || mappings["Default"];
+  const selectedName = ptSelect.value;
+  const config = mappings[selectedName] || {};
 
-  const invCols = findHeaderColumns(sheetINV, config);
+  const invCols = findHeaderColumns(sheetINV, {
+    kode: config.kode,
+    uraian: config.uraian,
+    qty: config.qty,
+    cif: config.cif,
+    suratjalan: config.suratjalan,
+  });
 
   const findInvoiceNo = (sheet) => {
     const range = XLSX.utils.decode_range(sheet["!ref"]);
@@ -145,6 +150,21 @@ function checkAll(sheetPL, sheetINV, sheetsDATA, kurs, kontrakNo, kontrakTgl) {
     }
   }
 
+  // ---------- NPWP CHECK ----------
+  const npwpDraft = getNPWPDraft(sheetsDATA);
+  const npwpRef = config.npwp || "";
+  const npwpMatch = String(npwpDraft) === String(npwpRef);
+
+  addResult("NPWP", npwpDraft, npwpRef, npwpMatch);
+
+  // ---------- Customer Name -------------
+
+  const customerDraft = getCustomerDraft(sheetsDATA);
+  const customerRef = config.check || "";
+  const customerMatch = String(customerDraft) === String(customerRef);
+
+  addResult("Customer", customerDraft, customerRef, customerMatch);
+
   // Jenis Trx
   let jenisTransaksi = "";
   const n2Val = getCellValue(sheetsDATA.HEADER, "N2") || "";
@@ -173,12 +193,11 @@ function checkAll(sheetPL, sheetINV, sheetsDATA, kurs, kontrakNo, kontrakTgl) {
   const isMatchTrx = jenisTransaksi.toUpperCase() === selectedTrx.toUpperCase();
   addResult("Jenis Transaksi", jenisTransaksi, selectedTrx, isMatchTrx);
 
-  // ---------- NPWP CHECK ----------
-  const npwpDraft = getNPWPDraft(sheetsDATA);
-  const npwpRef = config.npwp || localStorage.getItem("npwp") || "";
-  const npwpMatch = String(npwpDraft) === String(npwpRef);
+  const addressDraft = getAddressDraft(sheetsDATA);
+  const addressRef = config.address || "";
+  const addressMatch = String(addressDraft) === String(addressRef);
 
-  addResult("NPWP", npwpDraft, npwpRef, npwpMatch);
+  addResult("Address", addressDraft, addressRef, addressMatch);
 
   // Harga Penyerahan & Valuta
   const valuta = (getCellValue(sheetsDATA.HEADER, "CI2") || "").toUpperCase();

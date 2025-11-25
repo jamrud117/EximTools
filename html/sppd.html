@@ -44,14 +44,7 @@
         <div class="mb-3 row">
           <div class="col-md-12">
             <label class="form-label fw-semibold">Nama Perusahaan</label>
-            <select id="ptSelect" class="form-select">
-              <option value="">Pilih Perusahaan</option>
-              <option value="0">PT. Bintang Indokarya Gemilang</option>
-              <option value="1">PT. Shoetown Ligung Indonesia</option>
-              <option value="2">PT. Long Rich Indonesia</option>
-              <option value="3">PT. Panarub Industry</option>
-              <option value="4">PT. Yih Quan Footwear Indonesia</option>
-            </select>
+            <select id="ptSelect" class="form-select"></select>
           </div>
         </div>
         <!-- Kurs & Valuta -->
@@ -60,12 +53,10 @@
             <div class="mb-3">
               <label class="form-label fw-semibold">Kurs</label>
               <input
-                type="number"
+                type="text"
                 id="kurs"
                 class="form-control"
                 placeholder="Kurs Mingguan"
-                step="0.0001"
-                readonly
               />
             </div>
           </div>
@@ -138,18 +129,12 @@
     <script src="../js/utils.js"></script>
     <script>
       async function loadPTDropdown() {
-        let saved = localStorage.getItem("customerMappings");
         let mappings = {};
 
+        // Ambil dari localStorage
+        const saved = localStorage.getItem("companyMappings");
         if (saved) {
           mappings = JSON.parse(saved);
-        } else {
-          try {
-            const res = await fetch("mapping.json");
-            mappings = await res.json();
-          } catch (e) {
-            console.error("Gagal load mapping.json", e);
-          }
         }
 
         const ptSelect = document.getElementById("ptSelect");

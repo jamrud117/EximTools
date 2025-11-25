@@ -1,7 +1,7 @@
 let mappings = {};
 
 async function loadMappings() {
-  const local = localStorage.getItem("customerMappings");
+  const local = localStorage.getItem("companyMappings");
   if (local) {
     mappings = JSON.parse(local);
     return;

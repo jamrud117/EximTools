@@ -374,3 +374,69 @@ function fixNpwp(raw) {
 
   return s;
 }
+
+function getAddressDraft(sheetsDATA) {
+  const sheet = sheetsDATA.ENTITAS;
+
+  if (!sheet) return "";
+
+  const range = XLSX.utils.decode_range(sheet["!ref"]);
+  let colKode = null,
+    colAddress = null;
+
+  // Cari kolom
+  for (let c = range.s.c; c <= range.e.c; c++) {
+    const cell = sheet[XLSX.utils.encode_cell({ r: 0, c })];
+    if (!cell) continue;
+
+    const header = String(cell.v).toUpperCase();
+    if (header.includes("KODE ENTITAS")) colKode = c;
+    if (header.includes("ALAMAT ENTITAS")) colAddress = c;
+  }
+
+  if (colKode === null || colAddress === null) return "";
+
+  // Cari baris dengan KODE ENTITAS = 8
+  for (let r = 1; r <= range.e.r; r++) {
+    const kode = getCellValueRC(sheet, r, colKode);
+    if (String(kode).trim() === "8") {
+      let raw = getCellValueRC(sheet, r, colAddress);
+      return raw;
+    }
+  }
+
+  return "";
+}
+
+function getCustomerDraft(sheetsDATA) {
+  const sheet = sheetsDATA.ENTITAS;
+
+  if (!sheet) return "";
+
+  const range = XLSX.utils.decode_range(sheet["!ref"]);
+  let colKode = null,
+    colCustomer = null;
+
+  // Cari kolom
+  for (let c = range.s.c; c <= range.e.c; c++) {
+    const cell = sheet[XLSX.utils.encode_cell({ r: 0, c })];
+    if (!cell) continue;
+
+    const header = String(cell.v).toUpperCase();
+    if (header.includes("KODE ENTITAS")) colKode = c;
+    if (header.includes("NAMA ENTITAS")) colCustomer = c;
+  }
+
+  if (colKode === null || colCustomer === null) return "";
+
+  // Cari baris dengan KODE ENTITAS = 8
+  for (let r = 1; r <= range.e.r; r++) {
+    const kode = getCellValueRC(sheet, r, colKode);
+    if (String(kode).trim() === "8") {
+      let raw = getCellValueRC(sheet, r, colCustomer);
+      return raw;
+    }
+  }
+
+  return "";
+}
