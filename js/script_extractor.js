@@ -1,3 +1,6 @@
+// =========================================
+// NAVBAR HIGHLIGHT
+// =========================================
 const currentPage = window.location.pathname.split("/").pop();
 document.querySelectorAll(".nav-links a").forEach((link) => {
   if (link.getAttribute("href") === currentPage) {
@@ -5,6 +8,9 @@ document.querySelectorAll(".nav-links a").forEach((link) => {
   }
 });
 
+// =========================================
+// KONFIGURASI KOLUMNYA
+// =========================================
 const barangCols = [
   "NO",
   "HS",
@@ -51,18 +57,25 @@ const ekstraksiCols = [
 let originalEkstrRows = [];
 let currentEkstrRows = [];
 
-const sheetToJSON = (s) =>
-  XLSX.utils.sheet_to_json(s, { header: 1, raw: false });
+// =========================================
+// FUNGSI BANTUAN
+// =========================================
+
+const sheetToJSON = (sheet) =>
+  XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false });
 
 const buildTable = (headers, rows) => {
   let html = "<table><thead><tr>";
   headers.forEach((h) => (html += `<th>${h}</th>`));
   html += "<th>Aksi</th></tr></thead><tbody>";
+
   rows.forEach((r, i) => {
     html += "<tr>";
     headers.forEach((_, j) => (html += `<td>${r[j] ?? ""}</td>`));
-    html += `<td><button class="copyRowBtn" data-index="${i}">📋 Copy</button></td></tr>`;
+    html += `<td><button class="copyRowBtn" data-index="${i}">📋 Copy</button></td>`;
+    html += "</tr>";
   });
+
   html += "</tbody></table>";
   return html;
 };
@@ -87,14 +100,42 @@ const fadeUpdate = (el, html, after) => {
   }, 300);
 };
 
+function formatNumber(value) {
+  return Number.isInteger(value) ? value.toString() : value.toFixed(2);
+}
+
+// =========================================
+// 🔥 FUNGSI BARU: Ambil NDPBM dari HEADER
+// =========================================
+function getNDPBMFromHeader(headerSheet) {
+  const json = XLSX.utils.sheet_to_json(headerSheet, { header: 1 });
+  if (!json.length) return 1;
+
+  const headerRow = json[0].map((x) =>
+    (x || "").toString().trim().toUpperCase()
+  );
+  const colIndex = headerRow.indexOf("NDPBM");
+
+  if (colIndex === -1) return 1; // tidak ada kolom NDPBM → default 1
+
+  const raw = json[1]?.[colIndex];
+  const num = parseFloat(raw);
+
+  return !num || isNaN(num) ? 1 : num; // jika kosong/0 → default 1
+}
+
+// =========================================
+// PROSES WORKBOOK
+// =========================================
 function processWorkbook(wb) {
   const headerSheet = wb.Sheets["HEADER"];
   const barangSheet = wb.Sheets["BARANG"];
   const entitasSheet = wb.Sheets["ENTITAS"];
+
   if (!headerSheet || !barangSheet)
     return alert("Sheet HEADER atau BARANG tidak ditemukan!");
 
-  // HEADER
+  // --- HEADER ASAL ---
   const header = {
     nomorAju: headerSheet["A2"]?.v || "",
     dokumen: headerSheet["B2"]?.v || "",
@@ -103,51 +144,50 @@ function processWorkbook(wb) {
     tanggal: headerSheet["CF2"]?.v || "",
   };
 
+  // Supplier
   let namaSupplier = "-";
   if (entitasSheet) {
-    const entRaw = XLSX.utils.sheet_to_json(entitasSheet, { header: 1 });
-    const headerRow = entRaw[0].map((h) =>
-      (h || "").toString().trim().toUpperCase()
-    );
-    const kodeIdx = headerRow.indexOf("KODE ENTITAS");
-    const namaIdx = headerRow.indexOf("NAMA ENTITAS");
+    const ent = XLSX.utils.sheet_to_json(entitasSheet, { header: 1 });
+    const hdr = ent[0].map((h) => (h || "").toString().trim().toUpperCase());
+    const kodeIdx = hdr.indexOf("KODE ENTITAS");
+    const namaIdx = hdr.indexOf("NAMA ENTITAS");
+
     if (kodeIdx >= 0 && namaIdx >= 0) {
-      const supplierRow = entRaw.find((row, i) => i > 0 && row[kodeIdx] == 3);
-      if (supplierRow) namaSupplier = supplierRow[namaIdx] || "-";
+      const row = ent.find((r, i) => i > 0 && r[kodeIdx] == 3);
+      if (row) namaSupplier = row[namaIdx] || "-";
     }
   }
 
-  const headerLabels = {
-    nomorAju: "Nomor Aju Asal",
-    dokumen: "Kode Dokumen Asal",
-    kantor: "Kode Kantor Asal",
-    daftar: "Nomor Daftar Asal",
-    tanggal: "Tanggal Daftar Asal",
-  };
-
   document.getElementById("headerContent").innerHTML = `
-          <table>
-            <tr><th>Informasi</th><th>Data</th></tr>
-            <tr><td>Nama Supplier</td><td>${namaSupplier}</td></tr>
-            ${Object.entries(header)
-              .map(
-                ([k, v]) =>
-                  `<tr><td>${headerLabels[k] || k}</td><td>${v}</td></tr>`
-              )
-              .join("")}
-          </table>
-        `;
+    <table>
+      <tr><th>Informasi</th><th>Data</th></tr>
+      <tr><td>Nama Supplier</td><td>${namaSupplier}</td></tr>
+      <tr><td>Nomor Aju Asal</td><td>${header.nomorAju}</td></tr>
+      <tr><td>Kode Dokumen Asal</td><td>${header.dokumen}</td></tr>
+      <tr><td>Kode Kantor Asal</td><td>${header.kantor}</td></tr>
+      <tr><td>Nomor Daftar Asal</td><td>${header.daftar}</td></tr>
+      <tr><td>Tanggal Daftar Asal</td><td>${header.tanggal}</td></tr>
+    </table>
+  `;
 
-  // DATA BARANG
+  // =========================================
+  // 📌 AMBIL NDPBM DARI SHEET HEADER
+  // =========================================
+  const ndpbmGlobal = getNDPBMFromHeader(headerSheet);
+
+  // =========================================
+  // BARANG EXCEL
+  // =========================================
   const raw = sheetToJSON(barangSheet);
   const headers = raw[0];
   const data = raw.slice(1);
+
   const idx = (n) =>
-    headers.findIndex((h) => (h || "").toUpperCase().trim() === n);
+    headers.findIndex((h) => (h || "").toString().trim().toUpperCase() === n);
 
   const barangRows = data.map((r, i) =>
     barangCols.map((c) => {
-      if (c === "NO") return i + 1; // ← otomatis isi nomor urut
+      if (c === "NO") return i + 1;
       return idx(c) >= 0 ? r[idx(c)] ?? "" : "";
     })
   );
@@ -159,22 +199,17 @@ function processWorkbook(wb) {
   );
   attachCopyButtons("barangTableWrap", barangRows);
 
-  // DATA EKSTRAKSI
-  // DATA EKSTRAKSI (dengan logika CIF=0 → Harga Penyerahan, NDPBM default 1, CIF Rupiah dari Excel)
+  // =========================================
+  // EKSTRAKSI (Logika CIF Baru + NDPBM HEADER)
+  // =========================================
+
   const ekstrRows = data.map((r) => {
     const cifExcel = parseFloat(r[idx("CIF")]) || 0;
-    const ndpbmExcel = parseFloat(r[idx("NDPBM")]) || 0;
     const hargaExcel = parseFloat(r[idx("HARGA PENYERAHAN")]) || 0;
-    const cifRupiahExcel = parseFloat(r[idx("CIF RUPIAH")]) || 0;
+    const cifRpExcel = parseFloat(r[idx("CIF RUPIAH")]) || 0;
 
-    // Default NDPBM = 1 jika 0
-    const ndpbm = ndpbmExcel === 0 ? 1 : ndpbmExcel;
-
-    // Jika CIF Excel = 0 → pakai Harga Penyerahan dari Excel
     const cifFinal = cifExcel === 0 ? hargaExcel : cifExcel;
-
-    // Jika CIF Excel = 0 → Harga Penyerahan juga = harga Excel
-    const hargaFinal = cifExcel === 0 ? hargaExcel : cifExcel * ndpbm;
+    const hargaFinal = cifExcel === 0 ? hargaExcel : cifFinal * ndpbmGlobal;
 
     return ekstraksiCols.map((c) => {
       if (c === "KODE DOKUMEN ASAL") return header.dokumen;
@@ -185,12 +220,9 @@ function processWorkbook(wb) {
       if (c === "SERI BARANG ASAL") return r[idx("SERI BARANG")] ?? "";
 
       if (c === "CIF") return formatNumber(cifFinal);
+      if (c === "CIF RUPIAH") return formatNumber(cifRpExcel);
+      if (c === "NDPBM") return formatNumber(ndpbmGlobal);
       if (c === "HARGA PENYERAHAN") return formatNumber(hargaFinal);
-
-      // Ambil CIF Rupiah dari Excel, jangan 0
-      if (c === "CIF RUPIAH") return formatNumber(cifRupiahExcel);
-
-      if (c === "NDPBM") return formatNumber(ndpbm);
 
       const i = idx(c);
       return i >= 0 ? r[i] ?? "" : "";
@@ -202,11 +234,14 @@ function processWorkbook(wb) {
 
   const wrap = document.getElementById("ekstraksiTableWrap");
   document.getElementById("ekstraksiCard").style.display = "block";
+
   fadeUpdate(wrap, buildTable(ekstraksiCols, ekstrRows), () =>
     attachCopyButtons("ekstraksiTableWrap", ekstrRows)
   );
 
-  // Dropdown Barang
+  // =========================================
+  // DROPDOWN FILTER BARANG
+  // =========================================
   const select = document.getElementById("barangSelect");
   select.innerHTML = "";
   select.appendChild(new Option("TAMPILKAN SEMUA", "all"));
@@ -216,21 +251,21 @@ function processWorkbook(wb) {
 
   select.addEventListener("change", () => {
     const v = select.value;
-    if (v === "all")
+    if (v === "all") {
       fadeUpdate(wrap, buildTable(ekstraksiCols, currentEkstrRows), () =>
         attachCopyButtons("ekstraksiTableWrap", currentEkstrRows)
       );
-    else
+    } else {
       fadeUpdate(wrap, buildTable(ekstraksiCols, [currentEkstrRows[v]]), () =>
         attachCopyButtons("ekstraksiTableWrap", [currentEkstrRows[v]])
       );
+    }
   });
 }
-function formatNumber(value) {
-  return Number.isInteger(value) ? value.toString() : value.toFixed(2);
-}
 
-// Terapkan Quantity
+// =========================================
+// APPLY QUANTITY
+// =========================================
 function applyQuantity() {
   const qty = parseFloat(document.getElementById("quantityInput").value);
   const select = document.getElementById("barangSelect");
@@ -246,16 +281,16 @@ function applyQuantity() {
   const ndpbm = parseFloat(row[22]) || 1;
 
   const unitCIF = cifAwal / qtyAwal;
-  const unitCIFRupiah = cifRupiahAwal / qtyAwal;
+  const unitCIFRp = cifRupiahAwal / qtyAwal;
 
   const cifBaru = unitCIF * qty;
-  const cifRupiahBaru = unitCIFRupiah * qty;
-  const hargaPenyerahanBaru = cifBaru * ndpbm;
+  const cifRpBaru = unitCIFRp * qty;
+  const hargaBaru = cifBaru * ndpbm;
 
   row[8] = formatNumber(qty);
   row[20] = formatNumber(cifBaru);
-  row[21] = formatNumber(cifRupiahBaru);
-  row[23] = formatNumber(hargaPenyerahanBaru);
+  row[21] = formatNumber(cifRpBaru);
+  row[23] = formatNumber(hargaBaru);
 
   currentEkstrRows[index] = row;
 
@@ -266,10 +301,14 @@ function applyQuantity() {
   );
 }
 
+// =========================================
+// RESET BUTTON
+// =========================================
 function resetData() {
   currentEkstrRows = JSON.parse(JSON.stringify(originalEkstrRows));
   document.getElementById("quantityInput").value = "";
   document.getElementById("barangSelect").value = "all";
+
   fadeUpdate(
     document.getElementById("ekstraksiTableWrap"),
     buildTable(ekstraksiCols, currentEkstrRows),
@@ -277,20 +316,25 @@ function resetData() {
   );
 }
 
-document
-  .getElementById("applyQuantityBtn")
-  .addEventListener("click", applyQuantity);
-document.getElementById("resetBtn").addEventListener("click", resetData);
-
+// =========================================
+// FILE INPUT
+// =========================================
 document.getElementById("fileInput").addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (!file) return;
+
   const reader = new FileReader();
   reader.onload = (ev) => {
-    const wb = XLSX.read(new Uint8Array(ev.target.result), {
-      type: "array",
-    });
+    const wb = XLSX.read(new Uint8Array(ev.target.result), { type: "array" });
     processWorkbook(wb);
   };
   reader.readAsArrayBuffer(file);
 });
+
+// =========================================
+// BUTTON EVENTS
+// =========================================
+document
+  .getElementById("applyQuantityBtn")
+  .addEventListener("click", applyQuantity);
+document.getElementById("resetBtn").addEventListener("click", resetData);
