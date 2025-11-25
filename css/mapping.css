@@ -13,6 +13,7 @@ body::-webkit-scrollbar {
 .page-wrapper {
   padding: 0 40px;
   margin-top: 40px;
+  min-height: calc(100vh - 150px);
 }
 
 .main-nav {

@@ -92,6 +92,12 @@ function saveMapping() {
 
   saveToStorage();
   render();
+
+  const modal = bootstrap.Modal.getInstance(
+    document.getElementById("addModal")
+  );
+  if (modal) modal.hide();
+
   Swal.fire({
     position: "top-mid",
     icon: "success",

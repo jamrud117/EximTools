@@ -22,54 +22,78 @@
         </ul>
       </div>
     </nav>
+
+    <!-- ADD NEW CUSTOMER MODAL -->
+    <div class="modal fade" id="addModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Tambah Customer Baru</h5>
+            <button class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+
+          <div class="modal-body">
+            <label>Customer Name Dropdown</label>
+            <input id="mapPT" class="form-control mb-2" />
+
+            <label>Customer Checking</label>
+            <input id="mapCheck" class="form-control mb-2" />
+
+            <label>Address</label>
+            <input id="mapAddress" class="form-control mb-2" />
+
+            <label>Item Code</label>
+            <input id="mapKode" class="form-control mb-2" />
+
+            <label>Item Name</label>
+            <input id="mapUraian" class="form-control mb-2" />
+
+            <label>Quantity</label>
+            <input id="mapQty" class="form-control mb-2" />
+
+            <label>CIF</label>
+            <input id="mapCIF" class="form-control mb-2" />
+
+            <label>Delivery Note</label>
+            <input id="mapSJ" class="form-control mb-2" />
+
+            <label>NPWP</label>
+            <input id="npwp" class="form-control mb-2" maxlength="22" />
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-success" onclick="saveMapping()">
+              Save
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="page-wrapper">
-      <h2 class="text-center mb-5">Tambah Data Customer</h2>
-
-      <div class="card p-3 mb-4">
+      <div class="card p-3 mb-2">
+        <h2 class="text-center mb-3">Data Customer</h2>
         <p class="mb-3 text-danger">
-          *Note : Untuk isian dibawah menggunakan nama header pada file excel
-          INV dan PL
+          *Note : Pengisian form tambah data customer menggunakan nama header
+          pada file excel INV dan PL. Import data customer hanya bisa
+          menggunakan file ber-extensi JSON.
         </p>
-        <label class="mb-2">Customer Name Dropdown</label>
-        <input id="mapPT" class="form-control mb-2" />
-
-        <label class="mb-2">Customer Checking</label>
-        <input id="mapCheck" class="form-control mb-2" />
-
-        <label class="mb-2">Address</label>
-        <input id="mapAddress" class="form-control mb-2" />
-
-        <label class="mb-2">Item Code</label>
-        <input id="mapKode" class="form-control mb-2" />
-
-        <label class="mb-2">Item Name</label>
-        <input id="mapUraian" class="form-control mb-2" />
-
-        <label class="mb-2">Quantity</label>
-        <input id="mapQty" class="form-control mb-2" />
-
-        <label class="mb-2">CIF</label>
-        <input id="mapCIF" class="form-control mb-2" />
-
-        <label class="mb-2">Delivery Note</label>
-        <input id="mapSJ" class="form-control mb-3" />
-
-        <label class="mb-2">NPWP</label>
-        <input id="npwp" class="form-control mb-3" maxlength="22" />
-
         <div class="button-wrapper">
-          <button class="btn btn-success" onclick="saveMapping()">Save</button>
+          <button
+            class="btn btn-primary"
+            data-bs-toggle="modal"
+            data-bs-target="#addModal"
+          >
+            + Tambah Data
+          </button>
           <button class="btn btn-danger" onclick="exportMapping()">
-            Export JSON
+            Export
           </button>
           <button class="btn btn-primary" onclick="importMapping()">
-            Import JSON
+            Import
           </button>
         </div>
       </div>
-
-      <h4 class="mt-4">Data Customer Saat Ini</h4>
-
       <div class="table-wrapper">
         <table class="table table-bordered table-striped mt-3">
           <thead class="table-dark">
@@ -92,7 +116,7 @@
       </div>
 
       <!-- PAGINATION -->
-      <nav>
+      <nav class="d-flex justify-content-center">
         <ul class="pagination" id="pagination"></ul>
       </nav>
 
