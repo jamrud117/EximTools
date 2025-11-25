@@ -292,9 +292,18 @@ $("files").addEventListener("change", (e) => {
 });
 
 $("processBtn").addEventListener("click", async () => {
-  if (!selectedFiles.length) return alert("Pilih minimal 1 file Excel!");
+  if (!selectedFiles.length)
+    return Swal.fire({
+      icon: "error",
+      title: "Oops...",
+      text: "Pilih minimal 1 file Excel!",
+    });
   if (!$("jenisBarang").value)
-    return alert("Pilih jenis barang terlebih dahulu!");
+    return Swal.fire({
+      icon: "error",
+      title: "Oops...",
+      text: "Pilih jenis barang terlebih dahulu!",
+    });
   $("processBtn").disabled = true;
   $("processBtn").textContent = "Memproses...";
 
@@ -307,7 +316,11 @@ $("processBtn").addEventListener("click", async () => {
     $("result").value = generateResultText(extracted);
   } catch (err) {
     console.error(err);
-    alert("Terjadi kesalahan: " + err.message);
+    Swal.fire({
+      icon: "error",
+      title: "Oops...",
+      text: "Terjadi kesalahan: " + err.message,
+    });
   } finally {
     $("processBtn").disabled = false;
     $("processBtn").textContent = "Proses File";
@@ -316,9 +329,20 @@ $("processBtn").addEventListener("click", async () => {
 
 $("copyBtn").addEventListener("click", () => {
   const text = $("result").value;
-  if (!text) return alert("Belum ada hasil untuk disalin!");
+  if (!text)
+    return Swal.fire({
+      icon: "error",
+      title: "Oops...",
+      text: "Belum ada hasil untuk disalin!",
+    });
   navigator.clipboard.writeText(text);
-  alert("Teks berhasil disalin ke clipboard!");
+  Swal.fire({
+    position: "top-mid",
+    icon: "success",
+    title: "Teks berhasil disalin ke clipboard!",
+    showConfirmButton: false,
+    timer: 1500,
+  });
 });
 
 $("clearBtn").addEventListener("click", () => {

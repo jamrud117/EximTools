@@ -133,7 +133,10 @@ function processWorkbook(wb) {
   const entitasSheet = wb.Sheets["ENTITAS"];
 
   if (!headerSheet || !barangSheet)
-    return alert("Sheet HEADER atau BARANG tidak ditemukan!");
+    return Swal.fire({
+      icon: "error",
+      text: "Sheet HEADER atau BARANG tidak ditemukan!",
+    });
 
   // --- HEADER ASAL ---
   const header = {
@@ -288,8 +291,16 @@ function applyQuantity() {
   const select = document.getElementById("barangSelect");
   const index = parseInt(select.value);
 
-  if (select.value === "all") return alert("Pilih barang tertentu!");
-  if (isNaN(qty)) return alert("Masukkan quantity valid!");
+  if (select.value === "all")
+    return Swal.fire({
+      icon: "error",
+      text: "Pilih barang tertentu!",
+    });
+  if (isNaN(qty))
+    return Swal.fire({
+      icon: "error",
+      text: "Masukkan quantity yang valid!",
+    });
 
   const row = [...currentEkstrRows[index]];
   const qtyAwal = parseFloat(row[8]) || 1;

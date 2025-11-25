@@ -72,7 +72,10 @@ function saveMapping() {
 
   const emptyField = fields.find((f) => !f.value);
   if (emptyField) {
-    alert(`${emptyField.label} wajib diisi!`);
+    Swal.fire({
+      icon: "error",
+      text: `${emptyField.label} wajib diisi!`,
+    });
     return;
   }
 
@@ -89,7 +92,13 @@ function saveMapping() {
 
   saveToStorage();
   render();
-  alert("Mapping berhasil disimpan!");
+  Swal.fire({
+    position: "top-mid",
+    icon: "success",
+    title: "Mapping berhasil disimpan!",
+    showConfirmButton: false,
+    timer: 1500,
+  });
 }
 
 // ==============================
@@ -197,16 +206,43 @@ function saveEdit() {
 
   bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
   render();
-  alert("Data berhasil diperbarui!");
+  Swal.fire({
+    position: "top-mid",
+    icon: "success",
+    title: "Berhasil edit data!",
+    showConfirmButton: false,
+    timer: 1500,
+  });
 }
 function deleteMapping(pt) {
-  if (confirm(`Hapus mapping "${pt}"?`)) {
-    delete mappings[pt];
-    saveToStorage();
-    if ((currentPage - 1) * perPage >= Object.keys(mappings).length)
-      currentPage--;
-    render();
-  }
+  Swal.fire({
+    title: `Hapus data "${pt}"?`,
+    text: "Data ini akan dihapus secara permanen!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Ya, hapus!",
+    cancelButtonText: "Batalkan",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      delete mappings[pt];
+      saveToStorage();
+
+      if ((currentPage - 1) * perPage >= Object.keys(mappings).length)
+        currentPage--;
+
+      render();
+
+      Swal.fire({
+        icon: "success",
+        title: "Terhapus!",
+        text: `Data "${pt}" berhasil dihapus.`,
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    }
+  });
 }
 
 // ==============================
@@ -238,7 +274,13 @@ function importMapping() {
 
       currentPage = 1;
       render();
-      alert("Berhasil import mapping!");
+      Swal.fire({
+        position: "top-mid",
+        icon: "success",
+        title: "Berhasil import mapping!",
+        showConfirmButton: false,
+        timer: 1500,
+      });
     };
 
     reader.readAsText(e.target.files[0]);

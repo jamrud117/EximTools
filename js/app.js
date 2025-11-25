@@ -26,7 +26,11 @@ document.querySelectorAll(".nav-links a").forEach((link) => {
 // === Fungsi utama untuk memproses 3 file ===
 async function processFiles(files) {
   if (!files || files.length !== 3) {
-    alert("Upload 3 file (Draft, INV, PL) terlebih dahulu!");
+    Swal.fire({
+      icon: "error",
+      title: "Oops...",
+      text: "Upload 3 file (Draft, INV, PL) terlebih dahulu!",
+    });
     return;
   }
 
@@ -66,9 +70,12 @@ async function processFiles(files) {
 
     // === Validasi hasil deteksi ===
     if (!sheetPL || !sheetINV || !sheetsDATA) {
-      alert(
-        "Tidak bisa mendeteksi file Draft / INV / PL.\nPastikan struktur dan isi file sudah benar."
-      );
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "Tidak bisa mendeteksi file Draft / INV / PL.\nPastikan struktur dan isi file sudah benar.",
+      });
+
       console.error({ sheetPL, sheetINV, sheetsDATA });
       return;
     }
@@ -88,9 +95,11 @@ async function processFiles(files) {
     console.log("CheckAll selesai dieksekusi ✅");
   } catch (err) {
     console.error("Terjadi error saat memproses file:", err);
-    alert(
-      "Terjadi kesalahan saat memproses file. Lihat konsol (F12) untuk detailnya."
-    );
+    Swal.fire({
+      icon: "error",
+      title: "Oops...",
+      text: "Terjadi kesalahan saat memproses file. Lihat konsol (F12) untuk detailnya.",
+    });
   }
 }
 
@@ -138,7 +147,11 @@ document.addEventListener("DOMContentLoaded", () => {
   btn.addEventListener("click", async () => {
     const files = fileInput.files;
     if (!files || files.length === 0) {
-      alert("Pilih 3 file Excel terlebih dahulu!");
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "Pilih 3 file Excel terlebih dahulu!",
+      });
       return;
     }
     await processFiles(files);
