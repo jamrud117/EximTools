@@ -146,14 +146,31 @@ function processWorkbook(wb) {
 
   // Supplier
   let namaSupplier = "-";
+
   if (entitasSheet) {
     const ent = XLSX.utils.sheet_to_json(entitasSheet, { header: 1 });
     const hdr = ent[0].map((h) => (h || "").toString().trim().toUpperCase());
+
     const kodeIdx = hdr.indexOf("KODE ENTITAS");
     const namaIdx = hdr.indexOf("NAMA ENTITAS");
 
     if (kodeIdx >= 0 && namaIdx >= 0) {
-      const row = ent.find((r, i) => i > 0 && r[kodeIdx] == 3);
+      // Tentukan kode entitas sesuai dokumen asal
+      let targetKodeEntitas = 3; // default
+
+      if (header.dokumen === 40 || header.dokumen === "40") {
+        targetKodeEntitas = 9;
+      } else if (header.dokumen === 27 || header.dokumen === "27") {
+        targetKodeEntitas = 3;
+      } else if (header.dokumen === 23 || header.dokumen === "23") {
+        targetKodeEntitas = 5;
+      }
+
+      // Cari baris supplier sesuai kode entitas
+      const row = ent.find(
+        (r, i) => i > 0 && parseInt(r[kodeIdx]) === targetKodeEntitas
+      );
+
       if (row) namaSupplier = row[namaIdx] || "-";
     }
   }
