@@ -150,21 +150,6 @@ function checkAll(sheetPL, sheetINV, sheetsDATA, kurs, kontrakNo, kontrakTgl) {
     }
   }
 
-  // ---------- NPWP CHECK ----------
-  const npwpDraft = getNPWPDraft(sheetsDATA);
-  const npwpRef = config.npwp || "";
-  const npwpMatch = String(npwpDraft) === String(npwpRef);
-
-  addResult("NPWP", npwpDraft, npwpRef, npwpMatch);
-
-  // ---------- Customer Name -------------
-
-  const customerDraft = getCustomerDraft(sheetsDATA);
-  const customerRef = config.check || "";
-  const customerMatch = String(customerDraft) === String(customerRef);
-
-  addResult("Customer", customerDraft, customerRef, customerMatch);
-
   // Jenis Trx
   let jenisTransaksi = "";
   const n2Val = getCellValue(sheetsDATA.HEADER, "N2") || "";
@@ -193,11 +178,27 @@ function checkAll(sheetPL, sheetINV, sheetsDATA, kurs, kontrakNo, kontrakTgl) {
   const isMatchTrx = jenisTransaksi.toUpperCase() === selectedTrx.toUpperCase();
   addResult("Jenis Transaksi", jenisTransaksi, selectedTrx, isMatchTrx);
 
+  // ---------- Customer Name -------------
+
+  const customerDraft = getCustomerDraft(sheetsDATA);
+  const customerRef = config.check || "";
+  const customerMatch = String(customerDraft) === String(customerRef);
+
+  addResult("Customer", customerDraft, customerRef, customerMatch);
+
+  // Address
   const addressDraft = getAddressDraft(sheetsDATA);
   const addressRef = config.address || "";
   const addressMatch = String(addressDraft) === String(addressRef);
 
   addResult("Address", addressDraft, addressRef, addressMatch);
+
+  // ---------- NPWP CHECK ----------
+  const npwpDraft = getNPWPDraft(sheetsDATA);
+  const npwpRef = config.npwp || "";
+  const npwpMatch = String(npwpDraft) === String(npwpRef);
+
+  addResult("NPWP", npwpDraft, npwpRef, npwpMatch);
 
   // Harga Penyerahan & Valuta
   const valuta = (getCellValue(sheetsDATA.HEADER, "CI2") || "").toUpperCase();
