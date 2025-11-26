@@ -6,10 +6,17 @@
   --radius: 12px;
   --shadow: 0 6px 18px rgba(36, 59, 85, 0.08);
 }
+body,
+html {
+  height: 100%;
+}
 
 * {
   box-sizing: border-box;
   font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+body::-webkit-scrollbar {
+  display: none;
 }
 
 html,
@@ -24,7 +31,6 @@ body::-webkit-scrollbar {
 
 /* Layout */
 .page-wrapper {
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
 }

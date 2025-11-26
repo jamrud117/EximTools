@@ -296,12 +296,14 @@ $("processBtn").addEventListener("click", async () => {
     return Swal.fire({
       icon: "error",
       title: "Oops...",
+      scrollbarPadding: false,
       text: "Pilih minimal 1 file Excel!",
     });
   if (!$("jenisBarang").value)
     return Swal.fire({
       icon: "error",
       title: "Oops...",
+      scrollbarPadding: false,
       text: "Pilih jenis barang terlebih dahulu!",
     });
   $("processBtn").disabled = true;
@@ -320,6 +322,7 @@ $("processBtn").addEventListener("click", async () => {
       icon: "error",
       title: "Oops...",
       text: "Terjadi kesalahan: " + err.message,
+      scrollbarPadding: false,
     });
   } finally {
     $("processBtn").disabled = false;
@@ -334,6 +337,7 @@ $("copyBtn").addEventListener("click", () => {
       icon: "error",
       title: "Oops...",
       text: "Belum ada hasil untuk disalin!",
+      scrollbarPadding: false,
     });
   navigator.clipboard.writeText(text);
   Swal.fire({
@@ -341,6 +345,7 @@ $("copyBtn").addEventListener("click", () => {
     icon: "success",
     title: "Teks berhasil disalin ke clipboard!",
     showConfirmButton: false,
+    scrollbarPadding: false,
     timer: 1500,
   });
 });

@@ -489,6 +489,37 @@ function checkAll(sheetPL, sheetINV, sheetsDATA, kurs, kontrakNo, kontrakTgl) {
     return "";
   }
 
+  function getDocumentNumber(sheet, kodeDokumenTarget) {
+    // Convert sheet ke array 2D
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+    if (!rows || rows.length === 0) return "";
+
+    // Ambil header
+    const headerRow = rows[0].map((h) =>
+      (h || "").toString().trim().toUpperCase()
+    );
+
+    // Cari index kolom
+    const kodeIdx = headerRow.indexOf("KODE DOKUMEN");
+    const nomorIdx = headerRow.indexOf("NOMOR DOKUMEN");
+
+    if (kodeIdx === -1 || nomorIdx === -1) return "";
+
+    // Loop cari baris dengan kode dokumen sesuai
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row) continue;
+
+      const kodeValue = String(row[kodeIdx]).trim();
+      if (kodeValue === String(kodeDokumenTarget)) {
+        return row[nomorIdx] ?? "";
+      }
+    }
+
+    return ""; // jika tidak ditemukan
+  }
+
   const invDateText = findDateText(sheetINV, "Invoice");
   const plDateText = findDateText(sheetPL, "Packinglist");
 
@@ -497,9 +528,9 @@ function checkAll(sheetPL, sheetINV, sheetsDATA, kurs, kontrakNo, kontrakTgl) {
 
   addResult(
     "Invoice No.",
-    getCellValue(sheetsDATA.DOKUMEN, "D2"),
+    getDocumentNumber(sheetsDATA.DOKUMEN, "380"),
     invInvoiceNo,
-    isEqual(getCellValue(sheetsDATA.DOKUMEN, "D2"), invInvoiceNo)
+    isEqual(getDocumentNumber(sheetsDATA.DOKUMEN, "380"), invInvoiceNo)
   );
   addResult(
     "Invoice Date",
@@ -509,9 +540,9 @@ function checkAll(sheetPL, sheetINV, sheetsDATA, kurs, kontrakNo, kontrakTgl) {
   );
   addResult(
     "Packinglist No.",
-    getCellValue(sheetsDATA.DOKUMEN, "D2"),
+    getDocumentNumber(sheetsDATA.DOKUMEN, "217"),
     plInvoiceNo,
-    isEqual(getCellValue(sheetsDATA.DOKUMEN, "D2"), plInvoiceNo)
+    isEqual(getDocumentNumber(sheetsDATA.DOKUMEN, "217"), plInvoiceNo)
   );
   addResult(
     "Packinglist Date",
@@ -547,9 +578,9 @@ function checkAll(sheetPL, sheetINV, sheetsDATA, kurs, kontrakNo, kontrakTgl) {
 
   addResult(
     "Delivery Order",
-    getCellValue(sheetsDATA.DOKUMEN, "D5"),
+    getDocumentNumber(sheetsDATA.DOKUMEN, "640"),
     invSuratJalan,
-    isEqual(getCellValue(sheetsDATA.DOKUMEN, "D5"), invSuratJalan)
+    isEqual(getDocumentNumber(sheetsDATA.DOKUMEN, "640"), invSuratJalan)
   );
 
   addResult(

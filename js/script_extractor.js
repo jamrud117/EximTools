@@ -135,6 +135,7 @@ function processWorkbook(wb) {
   if (!headerSheet || !barangSheet)
     return Swal.fire({
       icon: "error",
+      scrollbarPadding: false,
       text: "Sheet HEADER atau BARANG tidak ditemukan!",
     });
 
@@ -294,11 +295,13 @@ function applyQuantity() {
   if (select.value === "all")
     return Swal.fire({
       icon: "error",
+      scrollbarPadding: false,
       text: "Pilih barang tertentu!",
     });
   if (isNaN(qty))
     return Swal.fire({
       icon: "error",
+      scrollbarPadding: false,
       text: "Masukkan quantity yang valid!",
     });
 

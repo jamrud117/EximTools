@@ -29,6 +29,7 @@ async function processFiles(files) {
     Swal.fire({
       icon: "error",
       title: "Oops...",
+      scrollbarPadding: false,
       text: "Upload 3 file (Draft, INV, PL) terlebih dahulu!",
     });
     return;
@@ -73,6 +74,7 @@ async function processFiles(files) {
       Swal.fire({
         icon: "error",
         title: "Oops...",
+        scrollbarPadding: false,
         text: "Tidak bisa mendeteksi file Draft / INV / PL.\nPastikan struktur dan isi file sudah benar.",
       });
 
@@ -98,6 +100,7 @@ async function processFiles(files) {
     Swal.fire({
       icon: "error",
       title: "Oops...",
+      scrollbarPadding: false,
       text: "Terjadi kesalahan saat memproses file. Lihat konsol (F12) untuk detailnya.",
     });
   }
@@ -151,6 +154,7 @@ document.addEventListener("DOMContentLoaded", () => {
         icon: "error",
         title: "Oops...",
         text: "Pilih 3 file Excel terlebih dahulu!",
+        scrollbarPadding: false,
       });
       return;
     }

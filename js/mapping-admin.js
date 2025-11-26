@@ -74,6 +74,7 @@ function saveMapping() {
   if (emptyField) {
     Swal.fire({
       icon: "error",
+      scrollbarPadding: false,
       text: `${emptyField.label} wajib diisi!`,
     });
     return;
@@ -101,6 +102,7 @@ function saveMapping() {
   Swal.fire({
     position: "top-mid",
     icon: "success",
+    scrollbarPadding: false,
     title: "Mapping berhasil disimpan!",
     showConfirmButton: false,
     timer: 1500,
@@ -217,6 +219,7 @@ function saveEdit() {
     icon: "success",
     title: "Berhasil edit data!",
     showConfirmButton: false,
+    scrollbarPadding: false,
     timer: 1500,
   });
 }
@@ -226,6 +229,7 @@ function deleteMapping(pt) {
     text: "Data ini akan dihapus secara permanen!",
     icon: "warning",
     showCancelButton: true,
+    scrollbarPadding: false,
     confirmButtonColor: "#d33",
     cancelButtonColor: "#3085d6",
     confirmButtonText: "Ya, hapus!",
@@ -243,6 +247,7 @@ function deleteMapping(pt) {
       Swal.fire({
         icon: "success",
         title: "Terhapus!",
+        scrollbarPadding: false,
         text: `Data "${pt}" berhasil dihapus.`,
         timer: 1500,
         showConfirmButton: false,
@@ -284,6 +289,7 @@ function importMapping() {
         position: "top-mid",
         icon: "success",
         title: "Berhasil import mapping!",
+        scrollbarPadding: false,
         showConfirmButton: false,
         timer: 1500,
       });
