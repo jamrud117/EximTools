@@ -142,7 +142,32 @@ function extractDataFromWorkbook(file, wb) {
 
   const t = getCell(wb, "HEADER", "CF2");
   const aju = getCell(wb, "HEADER", "A2") || "";
+  const jenistrx = getCell(wb, "HEADER", "N2");
+  let jenisTransaksi = "";
+  const n2Val = jenistrx;
+
+  switch (String(n2Val).trim()) {
+    case "1":
+      jenisTransaksi = "PENYERAHAN BKP";
+      break;
+    case "2":
+      jenisTransaksi = "PENYERAHAN JKP";
+      break;
+    case "3":
+      jenisTransaksi = "RETUR";
+      break;
+    case "4":
+      jenisTransaksi = "NON PENYERAHAN";
+      break;
+    case "5":
+      jenisTransaksi = "LAINNYA";
+      break;
+    default:
+      jenisTransaksi = "TIDAK DIKETAHUI";
+  }
+
   return {
+    jenistrx: jenisTransaksi,
     aju,
     pengirim,
     bc,
@@ -150,7 +175,7 @@ function extractDataFromWorkbook(file, wb) {
     kemasan: kemasanMap,
     barang: { unit: barangUnit, total: barangTotal },
     tanggal: t ? new Date(t) : null,
-    namaBarang, // simpan sebagai array
+    namaBarang,
   };
 }
 
@@ -219,6 +244,7 @@ function renderPreview(dataArr) {
     .map(
       (d) => `
       <tr>
+        <td>${d.jenistrx}</td>
         <td>${d.aju}</td>
         <td>${d.pengirim}</td>
         <td>${d.bc || "-"}</td>
@@ -237,40 +263,54 @@ function renderPreview(dataArr) {
 }
 
 function generateResultText(dataArr) {
+  const jenisTrx = [
+    ...new Set(dataArr.map((d) => d.jenistrx).filter(Boolean)),
+  ].join(" | ");
   const pengirim = [
     ...new Set(dataArr.map((d) => d.pengirim).filter(Boolean)),
-  ].join(" / ");
+  ].join(" | ");
   const bcList = [...new Set(dataArr.map((d) => d.bc).filter(Boolean))].join(
     ", "
   );
   const segel = dataArr.find((d) => d.segel)?.segel || "";
-  const kemasanMap = {};
-  const barangMap = {};
   const tanggalArr = [];
 
+  // Akumulasi kemasan dan barang
+  const kemasanMap = {};
+  const barangMap = {};
+
   dataArr.forEach((d) => {
+    // kemasan
     if (d.kemasan && typeof d.kemasan === "object") {
       for (const [unit, qty] of Object.entries(d.kemasan)) {
         kemasanMap[unit] = (kemasanMap[unit] || 0) + qty;
       }
     }
-    if (d.barang.unit)
+
+    // barang
+    if (d.barang.unit) {
       barangMap[d.barang.unit] =
         (barangMap[d.barang.unit] || 0) + d.barang.total;
+    }
+
+    // tanggal dokumen
     if (d.tanggal) tanggalArr.push(d.tanggal);
   });
 
   const kemasanText = Object.entries(kemasanMap)
     .map(([u, q]) => `${fmtNum(q)} ${u}`)
     .join(" + ");
+
   const barangText = Object.entries(barangMap)
     .map(([u, q]) => `${fmtNum(q)} ${u}`)
     .join(" + ");
+
   const tanggalDoc = formatTanggalDokumen(tanggalArr);
   const masukTxt = fmtDate(new Date($("masukTgl").value));
 
   return [
     "*BC 2.7 Masuk*",
+    `Jenis Transaksi : ${jenisTrx}`,
     `Pengirim : ${pengirim}`,
     `No BC 2.7 : ${bcList}`,
     `No Segel : ${segel}`,
