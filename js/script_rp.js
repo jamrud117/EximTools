@@ -1,5 +1,7 @@
-const currentPage = window.location.pathname.split("/").pop();
-document.querySelectorAll(".nav-links a").forEach((link) => {
+// ---------- highlight menu aktif di navbar ----------
+const currentPage = window.location.pathname.split("/").pop() || "index.html";
+
+document.querySelectorAll(".navbar-nav .nav-link").forEach((link) => {
   if (link.getAttribute("href") === currentPage) {
     link.classList.add("active");
   }
@@ -12,6 +14,11 @@ const fmtDate = (d) =>
     2,
     "0"
   )}/${d.getFullYear()}`;
+
+const fmtNum = (n) =>
+  typeof n === "number"
+    ? n.toLocaleString("id-ID")
+    : Number(n || 0).toLocaleString("id-ID");
 
 // ---------- pembacaan file ----------
 async function readWorkbook(file) {
@@ -29,24 +36,23 @@ async function readWorkbook(file) {
     reader.readAsArrayBuffer(file);
   });
 }
-const fmtNum = (n) =>
-  typeof n === "number"
-    ? n.toLocaleString("id-ID")
-    : Number(n || 0).toLocaleString("id-ID");
 
-// ---------- ekstraksi data ----------
+// ---------- helper akses cell ----------
 function getCell(wb, sheet, addr) {
   const s = wb.Sheets[sheet];
   return s && s[addr] ? s[addr].v : undefined;
 }
 
+// ---------- ambil nama entitas ----------
 function getEntitas(wb) {
   const s = wb.Sheets["ENTITAS"];
   if (!s) return "";
   const data = XLSX.utils.sheet_to_json(s, { header: 1 });
   if (!data.length) return "";
+
   let kodeIdx = -1,
     namaIdx = -1;
+
   for (let i = 0; i < data[0].length; i++) {
     const val = String(data[0][i] || "")
       .trim()
@@ -54,18 +60,22 @@ function getEntitas(wb) {
     if (val === "KODE ENTITAS") kodeIdx = i;
     if (val === "NAMA ENTITAS") namaIdx = i;
   }
+
   for (let r = 1; r < data.length; r++) {
     const kode = data[r][kodeIdx];
-    if (kode === 3 || String(kode).trim() === "3")
+    if (kode === 3 || String(kode).trim() === "3") {
       return String(data[r][namaIdx] || "").trim();
+    }
   }
   return "";
 }
 
+// ---------- ekstraksi data utama dari workbook ----------
 function extractDataFromWorkbook(file, wb) {
   const pengirim = getEntitas(wb);
   const bc = getCell(wb, "HEADER", "CP2") || "";
   const segel = getCell(wb, "HEADER", "BC2") || "";
+
   // ---- ambil semua data kemasan ----
   const sheetKemasan = wb.Sheets["KEMASAN"];
   let kemasanMap = {};
@@ -89,7 +99,7 @@ function extractDataFromWorkbook(file, wb) {
     if (kodeIdx === -1) kodeIdx = 2;
     if (jumlahIdx === -1) jumlahIdx = 3;
 
-    // iterasi semua baris data (mulai dari baris ke-2)
+    // iterasi semua baris data
     for (let r = 1; r < dataKemasan.length; r++) {
       const kode = String(dataKemasan[r][kodeIdx] || "").trim();
       const qty = Number(dataKemasan[r][jumlahIdx]) || 0;
@@ -98,21 +108,13 @@ function extractDataFromWorkbook(file, wb) {
     }
   }
 
-  // jika ada beberapa jenis kemasan, ambil semuanya
-  const kemUnit = Object.keys(kemasanMap).length
-    ? Object.keys(kemasanMap)[0]
-    : "";
-  const kemQty = kemasanMap[kemUnit] || 0;
-
   const barangUnit = getCell(wb, "BARANG", "J2");
   let barangTotal = 0;
   let namaBarang = [];
 
   const sheetBarang = wb.Sheets["BARANG"];
   if (sheetBarang && sheetBarang["!ref"]) {
-    const dataBarang = XLSX.utils.sheet_to_json(sheetBarang, {
-      header: 1,
-    });
+    const dataBarang = XLSX.utils.sheet_to_json(sheetBarang, { header: 1 });
 
     // cari kolom header "URAIAN"
     const headerRow = dataBarang[0] || [];
@@ -127,11 +129,10 @@ function extractDataFromWorkbook(file, wb) {
         const nama = dataBarang[r][uraianIdx];
         if (nama) namaArr.push(String(nama).trim());
       }
-      // hilangkan duplikat
       namaBarang = [...new Set(namaArr)];
     }
 
-    // hitung total barang (kolom J)
+    // hitung total barang (kolom J -> index 10)
     const range = XLSX.utils.decode_range(sheetBarang["!ref"]);
     for (let R = range.s.r; R <= range.e.r; ++R) {
       const addr = XLSX.utils.encode_cell({ c: 10, r: R });
@@ -183,7 +184,6 @@ function extractDataFromWorkbook(file, wb) {
 function formatTanggalDokumen(arr) {
   if (!arr.length) return "";
 
-  // Hilangkan duplikat & urutkan
   const sorted = [...new Set(arr.map((t) => t.getTime()))]
     .map((t) => new Date(t))
     .sort((a, b) => a - b);
@@ -198,11 +198,11 @@ function formatTanggalDokumen(arr) {
     const diff = (current - prev) / (1000 * 3600 * 24);
 
     if (
-      diff === 1 && // tanggal berurutan
+      diff === 1 &&
       current.getMonth() === start.getMonth() &&
       current.getFullYear() === start.getFullYear()
     ) {
-      end = current; // masih satu rentang
+      end = current;
     } else {
       groups.push([start, end]);
       start = current;
@@ -211,7 +211,6 @@ function formatTanggalDokumen(arr) {
   }
   groups.push([start, end]);
 
-  // Format tiap grup
   const formattedGroups = groups.map(([s, e]) => {
     const dd1 = String(s.getDate()).padStart(2, "0");
     const dd2 = String(e.getDate()).padStart(2, "0");
@@ -219,10 +218,8 @@ function formatTanggalDokumen(arr) {
     const yy = s.getFullYear();
 
     if (s.getTime() === e.getTime()) {
-      // tanggal tunggal
       return `${dd1}/${mm}/${yy}`;
     } else {
-      // rentang tanggal berurutan
       return `${dd1}-${dd2}/${mm}/${yy}`;
     }
   });
@@ -239,7 +236,8 @@ function updateFileList(files) {
 }
 
 function renderPreview(dataArr) {
-  const tbody = $("previewTable").querySelector("tbody");
+  // tbody sekarang id="previewTableBody" (langsung tbody)
+  const tbody = $("previewTableBody");
   tbody.innerHTML = dataArr
     .map(
       (d) => `
@@ -259,7 +257,9 @@ function renderPreview(dataArr) {
       </tr>`
     )
     .join("");
-  $("tableWrap").style.display = "block";
+
+  // tampilkan card preview dengan bootstrap (hapus d-none)
+  $("tableWrap").classList.remove("d-none");
 }
 
 function generateResultText(dataArr) {
@@ -275,25 +275,21 @@ function generateResultText(dataArr) {
   const segel = dataArr.find((d) => d.segel)?.segel || "";
   const tanggalArr = [];
 
-  // Akumulasi kemasan dan barang
   const kemasanMap = {};
   const barangMap = {};
 
   dataArr.forEach((d) => {
-    // kemasan
     if (d.kemasan && typeof d.kemasan === "object") {
       for (const [unit, qty] of Object.entries(d.kemasan)) {
         kemasanMap[unit] = (kemasanMap[unit] || 0) + qty;
       }
     }
 
-    // barang
     if (d.barang.unit) {
       barangMap[d.barang.unit] =
         (barangMap[d.barang.unit] || 0) + d.barang.total;
     }
 
-    // tanggal dokumen
     if (d.tanggal) tanggalArr.push(d.tanggal);
   });
 
@@ -306,7 +302,8 @@ function generateResultText(dataArr) {
     .join(" + ");
 
   const tanggalDoc = formatTanggalDokumen(tanggalArr);
-  const masukTxt = fmtDate(new Date($("masukTgl").value));
+  const masukTglVal = $("masukTgl").value;
+  const masukTxt = masukTglVal ? fmtDate(new Date(masukTglVal)) : "";
 
   return [
     "*BC 2.7 Masuk*",
@@ -314,8 +311,8 @@ function generateResultText(dataArr) {
     `Pengirim : ${pengirim}`,
     `No BC 2.7 : ${bcList}`,
     `No Segel : ${segel}`,
-    `Jumlah kemasan : ${kemasanText}`,
     `Jenis Barang : ${$("jenisBarang").value}`,
+    `Jumlah kemasan : ${kemasanText}`,
     `Jumlah barang : ${barangText}`,
     `Tanggal Dokumen : ${tanggalDoc}`,
     `Masuk Tgl : ${masukTxt}`,
@@ -323,6 +320,10 @@ function generateResultText(dataArr) {
 }
 
 // ---------- event handler ----------
+document.getElementById("masukTgl").addEventListener("click", function () {
+  this.showPicker();
+});
+
 $("masukTgl").value = new Date().toISOString().slice(0, 10);
 let selectedFiles = [];
 
@@ -339,6 +340,7 @@ $("processBtn").addEventListener("click", async () => {
       scrollbarPadding: false,
       text: "Pilih minimal 1 file Excel!",
     });
+
   if (!$("jenisBarang").value)
     return Swal.fire({
       icon: "error",
@@ -346,6 +348,7 @@ $("processBtn").addEventListener("click", async () => {
       scrollbarPadding: false,
       text: "Pilih jenis barang terlebih dahulu!",
     });
+
   $("processBtn").disabled = true;
   $("processBtn").textContent = "Memproses...";
 
@@ -366,7 +369,7 @@ $("processBtn").addEventListener("click", async () => {
     });
   } finally {
     $("processBtn").disabled = false;
-    $("processBtn").textContent = "Proses File";
+    $("processBtn").textContent = "Proses";
   }
 });
 
@@ -379,6 +382,7 @@ $("copyBtn").addEventListener("click", () => {
       text: "Belum ada hasil untuk disalin!",
       scrollbarPadding: false,
     });
+
   navigator.clipboard.writeText(text);
   Swal.fire({
     position: "top-mid",
@@ -394,8 +398,11 @@ $("clearBtn").addEventListener("click", () => {
   $("files").value = "";
   selectedFiles = [];
   updateFileList([]);
-  $("previewTable").querySelector("tbody").innerHTML = "";
-  $("tableWrap").style.display = "none";
+
+  // kosongkan preview dan sembunyikan card
+  $("previewTableBody").innerHTML = "";
+  $("tableWrap").classList.add("d-none");
+
   $("result").value = "";
   $("jenisBarang").value = "";
   $("masukTgl").value = new Date().toISOString().slice(0, 10);

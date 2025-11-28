@@ -2,125 +2,183 @@
 <html lang="id">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <link rel="icon" type="image/png" href="assets/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Pelaporan Pemasukan Barang</title>
+
+    <!-- Bootstrap 5 -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./css/style_rp.css" />
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script defer src="./js/script_rp.js"></script>
   </head>
 
-  <body>
-    <div class="page-wrapper">
-      <!-- 🌐 NAVBAR -->
-      <nav class="main-nav">
-        <div class="nav-container">
-          <div class="nav-logo">YXF Tools</div>
-          <ul class="nav-links">
-            <li><a href="index.html" class="active">Pelaporan Barang</a></li>
-            <li><a href="html/Extractor.html">Excel Extractor</a></li>
-            <li><a href="html/sppd.html">Pengecekan Dokumen</a></li>
-            <li>
-              <a href="./html/mapping-admin.html">Tambah Customer</a>
-            </li>
-          </ul>
+  <!-- Sticky Footer Layout -->
+  <body class="d-flex flex-column min-vh-100">
+    <!-- MAIN WRAPPER (agar konten mendorong footer ke bawah) -->
+    <div class="flex-grow-1">
+      <!-- NAVBAR -->
+      <nav
+        class="navbar navbar-expand-lg navbar-dark"
+        style="background: #1b2a49"
+      >
+        <div class="container-fluid">
+          <a class="navbar-brand fw-bold" href="#">YXF Tools</a>
+
+          <button
+            class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navMenu"
+          >
+            <span class="navbar-toggler-icon"></span>
+          </button>
+
+          <div class="collapse navbar-collapse" id="navMenu">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+              <li class="nav-item">
+                <a class="nav-link active" href="index.html"
+                  >Pelaporan Barang</a
+                >
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="html/Extractor.html"
+                  >Excel Extractor</a
+                >
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="html/sppd.html">Pengecekan Dokumen</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="./html/mapping-admin.html"
+                  >Tambah Customer</a
+                >
+              </li>
+            </ul>
+          </div>
         </div>
       </nav>
 
-      <!-- 🌟 MAIN CONTENT -->
-      <main class="container">
-        <header>
-          <div class="logo">YXF</div>
-          <div class="title">
-            <h2>Pelaporan Pemasukan Barang</h2>
-            <p class="subtitle">
-              Upload beberapa file Excel (.xlsx) — Ekstrak & gabungkan menjadi
-              teks siap salin.
-            </p>
+      <!-- MAIN CONTENT -->
+      <div class="container py-4">
+        <!-- Header Title -->
+        <div class="d-flex align-items-center gap-3 mb-4">
+          <div class="logo-box">YXF</div>
+          <div>
+            <h3 class="mb-0 fw-bold">Pelaporan Pemasukan Barang</h3>
+            <small class="text-muted"
+              >Upload beberapa file Excel, ekstrak, & gabungkan menjadi teks
+              siap salin.</small
+            >
           </div>
-        </header>
+        </div>
 
-        <!-- 🗂️ CARD INPUT -->
-        <div class="card form-card">
-          <div class="form-grid">
-            <div>
-              <label for="files" class="file-label"
-                >📁 Pilih File Excel (.xlsx)</label
-              >
-              <input id="files" type="file" accept=".xlsx" multiple />
-              <div id="fileList">Belum ada file dipilih.</div>
+        <!-- INPUT CARD -->
+        <div class="card shadow-sm mb-4">
+          <div class="card-body">
+            <div class="row g-4">
+              <!-- Upload File -->
+              <div class="col-md-6">
+                <label class="form-label fw-semibold"
+                  >Pilih File Excel (.xlsx)</label
+                >
+                <input
+                  id="files"
+                  type="file"
+                  accept=".xlsx"
+                  multiple
+                  class="form-control"
+                />
+                <div id="fileList" class="small text-muted mt-1 ms-1">
+                  Belum ada file dipilih.
+                </div>
+              </div>
+
+              <!-- Jenis + Tanggal -->
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Jenis Barang</label>
+                <select class="form-select" id="jenisBarang">
+                  <option value="">Pilih Jenis Barang</option>
+                  <option value="Insole">INSOLE</option>
+                  <option value="Eva Footbed">EVA FOOTBED</option>
+                  <option value="Textile">TEXTILE</option>
+                  <option value="PU ORTHOLITE">PU ORTHOLITE</option>
+                  <option value="Logo">LOGO</option>
+                  <option value="Kemasan">KEMASAN</option>
+                </select>
+
+                <label class="form-label fw-semibold mt-3">Tanggal Masuk</label>
+                <input type="date" class="form-control" id="masukTgl" />
+              </div>
             </div>
 
-            <div class="input-group">
-              <label for="jenisBarang">Jenis Barang</label>
-              <select id="jenisBarang">
-                <option value="">Pilih Jenis Barang</option>
-                <option value="Insole">INSOLE</option>
-                <option value="Eva Footbed">EVA FOOTBED</option>
-                <option value="Textile">TEXTILE</option>
-                <option value="PU ORTHOLITE">PU ORTHOLITE</option>
-                <option value="Logo">LOGO</option>
-                <option value="Kemasan">KEMASAN</option>
-              </select>
-              <label for="masukTgl" style="margin-top: 5px"
-                >Tanggal Masuk</label
-              >
-              <input id="masukTgl" type="date" />
+            <!-- Buttons -->
+            <div class="d-flex justify-content-end mt-4">
+              <button id="processBtn" class="btn btn-primary me-2">
+                Porses
+              </button>
+              <button id="clearBtn" class="btn btn-outline-primary">
+                Reset
+              </button>
             </div>
           </div>
+        </div>
 
-          <div class="action-buttons">
-            <button id="processBtn" class="btn">Proses</button>
-            <button id="clearBtn" class="btn secondary">Reset</button>
+        <!-- PREVIEW TABLE -->
+        <div id="tableWrap" class="card shadow-sm mb-4 d-none">
+          <div class="card-body">
+            <h5 class="fw-bold mb-3">📋 Preview Data</h5>
+
+            <div class="table-responsive" style="max-height: 420px">
+              <table class="table table-striped table-sm">
+                <thead class="table-primary">
+                  <tr>
+                    <th>Jenis Transaksi</th>
+                    <th>Nomor Aju</th>
+                    <th>Pengirim</th>
+                    <th>Nomor Pendaftaran</th>
+                    <th>Jumlah Kemasan</th>
+                    <th>Jumlah Barang</th>
+                    <th>Tanggal Dokumen</th>
+                    <th>Nama Barang</th>
+                  </tr>
+                </thead>
+                <tbody id="previewTableBody"></tbody>
+              </table>
+            </div>
           </div>
         </div>
 
-        <!-- 📊 CARD PREVIEW -->
-        <div id="tableWrap" class="card table-card" style="display: none">
-          <h3>📋 Preview Data</h3>
-          <div class="table-container">
-            <table id="previewTable">
-              <thead>
-                <tr>
-                  <th>Jenis Transaksi</th>
-                  <th>Nomor Aju</th>
-                  <th>Pengirim</th>
-                  <th>Nomor Pendaftaran</th>
-                  <th>Jumlah Kemasan</th>
-                  <th>Jumlah Barang</th>
-                  <th>Tanggal Dokumen</th>
-                  <th>Nama Barang</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
+        <!-- RESULT -->
+        <div class="card shadow-sm mb-5">
+          <div class="card-body">
+            <h6 class="fw-bold mb-2">🧩 Hasil Teks Siap Copy</h6>
+            <textarea
+              id="result"
+              readonly
+              class="form-control"
+              rows="6"
+            ></textarea>
+
+            <div class="d-flex justify-content-end mt-3">
+              <button id="copyBtn" class="btn btn-primary">
+                📋 Copy To Clipboard
+              </button>
+            </div>
           </div>
         </div>
-
-        <!-- 🧾 CARD HASIL -->
-        <div class="card result-card">
-          <div class="result-header">
-            <strong>🧩 Hasil Teks Siap Copy</strong>
-          </div>
-          <textarea id="result" readonly></textarea>
-          <div class="copy-area">
-            <button id="copyBtn" class="btn secondary">
-              Salin ke Clipboard
-            </button>
-          </div>
-        </div>
-      </main>
-
-      <!-- 🌙 FOOTER -->
-      <footer class="main-footer">
-        <p>© 2025 YXF Tools — All rights reserved | Made with 💡 by YF</p>
-      </footer>
+      </div>
     </div>
 
+    <!-- FOOTER (sticky) -->
+    <footer class="py-3 text-center mt-auto">
+      © 2025 YXF Tools — All rights reserved | Made with 💡 by YF
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   </body>
 </html>
