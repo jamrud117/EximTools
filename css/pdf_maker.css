@@ -1,0 +1,168 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: #eef4ff;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 🌐 Navbar (Standardized) */
+.main-nav {
+  background: #1b2a49;
+  color: #fff;
+  padding: 16px 0; /* diseragamkan tinggi 16px atas bawah */
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.nav-container {
+  width: 100%; /* konsisten dengan layout rata tengah */
+  padding: 0 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nav-logo {
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.5px;
+}
+
+.nav-links {
+  list-style: none;
+  display: flex;
+  gap: 24px;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-links a {
+  color: #f0f0f0;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 15px;
+  transition: color 0.3s ease;
+}
+
+.nav-links a:hover {
+  color: #ffd54f;
+}
+
+.nav-links a.active {
+  color: #ffd54f;
+  font-weight: 600;
+  border-bottom: 2px solid #ffd54f;
+}
+/* 🌙 Footer Style */
+.main-footer {
+  background: #1b2a49;
+  color: #ccc;
+  text-align: center;
+  padding: 14px 0;
+  font-size: 14px;
+  letter-spacing: 0.3px;
+  margin-top: auto;
+}
+
+.main-footer p {
+  margin: 0;
+}
+
+/* Responsive Navbar */
+@media (max-width: 700px) {
+  .nav-container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .nav-links {
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+    margin-top: 8px;
+  }
+}
+
+#pdf-container {
+  position: relative;
+  display: inline-block;
+}
+
+#pdf-canvas {
+  border: 1px solid #bbb;
+  background: white;
+  border-radius: 4px;
+}
+
+/* Marker Box (sama persis seperti desain asli) */
+#marker-box {
+  position: absolute;
+  top: 570px;
+  left: 317px;
+  width: 380px;
+  border: 2px solid #000;
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+#marker-box,
+#marker-box * {
+  font-family: Arial, Helvetica, sans-serif !important;
+}
+
+.marker-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-bottom: 2px solid #000;
+  text-align: center;
+  font-weight: bold;
+  height: 25px;
+  line-height: 25px;
+}
+
+.marker-header div:first-child {
+  border-right: 2px solid #000;
+}
+
+.marker-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.marker-col {
+  padding: 6px 10px;
+  border-right: 2px solid #000;
+}
+
+.marker-col:last-child {
+  border-right: none;
+}
+
+.marker-row {
+  display: flex;
+  margin-bottom: 4px;
+}
+
+.marker-label {
+  width: 55px;
+}
+
+.marker-colon {
+  width: 10px;
+}
+#marker-box.hidden {
+  display: none !important;
+}

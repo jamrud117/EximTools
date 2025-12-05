@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <title>PDF Marker SPPB</title>
+
+    <!-- Bootstrap -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/pdf_maker.css" />
+
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
+    <!-- pdf-lib -->
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+  </head>
+
+  <body>
+    <!-- 🌐 NAVBAR -->
+    <nav class="main-nav">
+      <div class="nav-container">
+        <div class="nav-logo">YXF Tools</div>
+        <ul class="nav-links">
+          <li><a href="../index.html">Pelaporan Barang</a></li>
+          <li><a href="Extractor.html">Excel Extractor</a></li>
+          <li><a href="sppd.html">Pengecekan Dokumen</a></li>
+          <li><a href="mapping-admin.html">Tambah Customer</a></li>
+          <li><a href="pdf_marker.html">PDF Marker</a></li>
+        </ul>
+      </div>
+    </nav>
+    <div class="container mt-4 py-4">
+      <!-- TITLE -->
+      <div class="text-center mb-4">
+        <h2 class="fw-bold">SPPB PDF Marker</h2>
+        <p class="text-muted">
+          Tambahkan mark "Selesai Stuffing" dan "Gate Out" ke atas PDF SPPB
+          Anda.
+        </p>
+      </div>
+
+      <!-- FORM INPUT -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+          <strong>Input Data Marker</strong>
+        </div>
+
+        <div class="card-body">
+          <div class="row">
+            <!-- LEFT: STUFFING -->
+            <div class="col-md-6">
+              <h5 class="fw-bold">SELESAI STUFFING</h5>
+
+              <div class="mb-2">
+                <label class="form-label">Hari</label>
+                <input id="ss_hari" class="form-control" />
+              </div>
+
+              <div class="mb-2">
+                <label class="form-label">Tanggal</label>
+                <input
+                  id="ss_tgl"
+                  class="form-control"
+                  placeholder="dd/mm/yyyy"
+                />
+              </div>
+
+              <div class="mb-2">
+                <label class="form-label">Jam</label>
+                <input id="ss_jam" class="form-control" placeholder="--:--" />
+              </div>
+            </div>
+
+            <!-- RIGHT: GATE OUT -->
+            <div class="col-md-6">
+              <h5 class="fw-bold">GATE OUT</h5>
+
+              <div class="mb-2">
+                <label class="form-label">Hari</label>
+                <input id="go_hari" class="form-control" />
+              </div>
+
+              <div class="mb-2">
+                <label class="form-label">Tanggal</label>
+                <input
+                  id="go_tgl"
+                  class="form-control"
+                  placeholder="dd/mm/yyyy"
+                />
+              </div>
+
+              <div class="mb-2">
+                <label class="form-label">Jam</label>
+                <input id="go_jam" class="form-control" placeholder="--:--" />
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-3 d-flex gap-2">
+            <input type="file" id="pdf-file" class="form-control w-100" />
+            <button onclick="downloadPDF()" class="btn btn-primary w-100">
+              Download PDF
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PDF PREVIEW -->
+      <div class="card shadow-sm">
+        <div class="card-header bg-danger text-white">
+          <strong>Preview PDF</strong> (Halaman 1)
+        </div>
+
+        <div class="card-body text-center">
+          <div id="pdf-container">
+            <canvas id="pdf-canvas"></canvas>
+
+            <!-- MARKER -->
+            <div id="marker-box" class="hidden">
+              <div class="marker-header">
+                <div>SELESAI STUFFING</div>
+                <div>GATE OUT</div>
+              </div>
+
+              <div class="marker-body">
+                <!-- Left -->
+                <div class="marker-col">
+                  <div class="marker-row">
+                    <div class="marker-label">Hari</div>
+                    <div class="marker-colon">:</div>
+                    <div id="o_ss_hari"></div>
+                  </div>
+                  <div class="marker-row">
+                    <div class="marker-label">Tanggal</div>
+                    <div class="marker-colon">:</div>
+                    <div id="o_ss_tgl"></div>
+                  </div>
+                  <div class="marker-row">
+                    <div class="marker-label">Jam</div>
+                    <div class="marker-colon">:</div>
+                    <div id="o_ss_jam"></div>
+                  </div>
+                </div>
+
+                <!-- Right -->
+                <div class="marker-col">
+                  <div class="marker-row">
+                    <div class="marker-label">Hari</div>
+                    <div class="marker-colon">:</div>
+                    <div id="o_go_hari"></div>
+                  </div>
+                  <div class="marker-row">
+                    <div class="marker-label">Tanggal</div>
+                    <div class="marker-colon">:</div>
+                    <div id="o_go_tgl"></div>
+                  </div>
+                  <div class="marker-row">
+                    <div class="marker-label">Jam</div>
+                    <div class="marker-colon">:</div>
+                    <div id="o_go_jam"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 🌙 FOOTER -->
+    <footer class="main-footer">
+      <p>© 2025 YXF Tools — All rights reserved | Made with 💡 by YF</p>
+    </footer>
+
+    <!-- ============= JAVASCRIPT LOGIC ============= -->
+    <script src="../js/pdf_maker.js"></script>
+  </body>
+</html>
