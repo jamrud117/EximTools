@@ -257,12 +257,25 @@ async function downloadPDF() {
   const finalPdf = await pdfDoc.save();
   const blob = new Blob([finalPdf], { type: "application/pdf" });
 
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
+  const safeName = extractedRegNumber.replace(/[\\/:*?"<>|]/g, "-") + ".pdf";
 
-  // Sanitasi nama file
-  const safeName = extractedRegNumber.replace(/[\\/:*?"<>|]/g, "-");
-  link.download = `SPPB_${safeName}.pdf`;
+  try {
+    const handle = await window.showSaveFilePicker({
+      suggestedName: `SPPB_${safeName}`,
+      types: [
+        {
+          description: "PDF Document",
+          accept: { "application/pdf": [".pdf"] },
+        },
+      ],
+    });
 
-  link.click();
+    const writable = await handle.createWritable();
+    await writable.write(blob);
+    await writable.close();
+
+    alert("File berhasil disimpan.");
+  } catch (err) {
+    console.log("Save canceled or failed:", err);
+  }
 }
