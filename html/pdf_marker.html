@@ -18,6 +18,8 @@
 
     <!-- pdf-lib -->
     <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+    <!-- JSZip untuk membuat file ZIP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   </head>
 
   <body>
@@ -114,8 +116,13 @@
           </div>
 
           <div class="mt-3 d-flex gap-2">
-            <input type="file" id="pdf-file" class="form-control w-100" />
-            <button onclick="downloadPDF()" class="btn btn-primary w-100">
+            <input
+              type="file"
+              id="pdf-file"
+              class="form-control w-100"
+              multiple
+            />
+            <button onclick="downloadAllPDF()" class="btn btn-primary w-100">
               Download PDF
             </button>
           </div>
@@ -145,17 +152,17 @@
                   <div class="marker-row">
                     <div class="marker-label">Hari</div>
                     <div class="marker-colon">:</div>
-                    <div id="o_ss_hari"></div>
+                    <div id="o_ss_hari" class="marker-value"></div>
                   </div>
                   <div class="marker-row">
                     <div class="marker-label">Tanggal</div>
                     <div class="marker-colon">:</div>
-                    <div id="o_ss_tgl"></div>
+                    <div id="o_ss_tgl" class="marker-value"></div>
                   </div>
                   <div class="marker-row">
                     <div class="marker-label">Jam</div>
                     <div class="marker-colon">:</div>
-                    <div id="o_ss_jam"></div>
+                    <div id="o_ss_jam" class="marker-value"></div>
                   </div>
                 </div>
 
@@ -164,17 +171,17 @@
                   <div class="marker-row">
                     <div class="marker-label">Hari</div>
                     <div class="marker-colon">:</div>
-                    <div id="o_go_hari"></div>
+                    <div id="o_go_hari" class="marker-value"></div>
                   </div>
                   <div class="marker-row">
                     <div class="marker-label">Tanggal</div>
                     <div class="marker-colon">:</div>
-                    <div id="o_go_tgl"></div>
+                    <div id="o_go_tgl" class="marker-value"></div>
                   </div>
                   <div class="marker-row">
                     <div class="marker-label">Jam</div>
                     <div class="marker-colon">:</div>
-                    <div id="o_go_jam"></div>
+                    <div id="o_go_jam" class="marker-value"></div>
                   </div>
                 </div>
               </div>

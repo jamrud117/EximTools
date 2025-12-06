@@ -24,8 +24,7 @@ function todayDDMMYYYY() {
 ================================ */
 let originalPdfBytes = null;
 let currentViewport = null;
-let extractedRegNumber = ""; // nomor pendaftaran untuk preview pertama
-let pdfFiles = []; // semua file PDF yang diupload
+let extractedRegNumber = ""; // <-- FINAL NOMOR PENDAFTARAN
 
 /* ===============================
    DEFAULT VALUE
@@ -68,106 +67,84 @@ function updateBox() {
 }
 
 /* ===========================================================
-   FUNGSI BANTU: EXTRACT NOMOR PENDAFTARAN DARI ITEMS TEKS
-=========================================================== */
-function extractRegFromItems(items) {
-  let reg = "";
-
-  // Normalisasi teks
-  const trimmed = items.map((i) => (i || "").toString().trim());
-
-  // 1. Cari label "Nomor Pendaftaran"
-  let labelIdx = trimmed.findIndex(
-    (txt) => txt.replace(/\s+/g, "").toLowerCase() === "nomorpendaftaran"
-  );
-
-  // 2. Ambil angka sebelum label (INI NOMOR PENDAFTARAN YANG BENAR)
-  if (labelIdx !== -1) {
-    for (let i = labelIdx - 1; i >= 0; i--) {
-      let part = trimmed[i];
-      if (!part) continue;
-
-      if (/^\d+$/.test(part)) {
-        reg = part;
-        break;
-      }
-    }
-  }
-
-  // 3. Fallback jika gagal
-  if (!reg) {
-    const fallbackMatch = trimmed.join(" ").match(/\b\d{5,20}\b/);
-    reg = fallbackMatch ? fallbackMatch[0] : "UNKNOWN";
-  }
-
-  return reg;
-}
-
-/* ===========================================================
-   FUNGSI BANTU: EXTRACT NOMOR DARI BYTE PDF (UNTUK BATCH)
-=========================================================== */
-async function extractRegNumberFromBytes(uint8Array) {
-  const pdf = await pdfjsLib.getDocument(uint8Array).promise;
-  const page = await pdf.getPage(1);
-  const textContent = await page.getTextContent();
-  const items = textContent.items.map((i) => i.str || "");
-  return extractRegFromItems(items);
-}
-
-/* ===========================================================
-   LOAD PDF PERTAMA + PREVIEW + EXTRACT REG
+   LOAD PDF + EXTRACT NOMOR PENDAFTARAN (AKURASI 100%)
 =========================================================== */
 document.getElementById("pdf-file").addEventListener("change", function () {
-  const files = Array.from(this.files || []);
-  pdfFiles = files;
-
-  if (!pdfFiles.length) return;
-
-  // Tampilkan marker-box
   document.getElementById("marker-box").classList.remove("hidden");
 
-  // Load dan preview hanya PDF pertama
-  loadFirstPreview(pdfFiles[0]);
-});
+  const file = this.files[0];
+  if (!file) return;
 
-function loadFirstPreview(file) {
   const reader = new FileReader();
 
-  reader.onload = async function () {
+  reader.onload = function () {
     originalPdfBytes = new Uint8Array(this.result);
 
-    const pdf = await pdfjsLib.getDocument(originalPdfBytes).promise;
-    const page = await pdf.getPage(1);
+    pdfjsLib.getDocument(originalPdfBytes).promise.then((pdf) => {
+      pdf.getPage(1).then(async (page) => {
+        currentViewport = page.getViewport({ scale: 1.3 });
 
-    // Viewport untuk canvas
-    currentViewport = page.getViewport({ scale: 1.3 });
+        const canvas = document.getElementById("pdf-canvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = currentViewport.width;
+        canvas.height = currentViewport.height;
 
-    const canvas = document.getElementById("pdf-canvas");
-    const ctx = canvas.getContext("2d");
-    canvas.width = currentViewport.width;
-    canvas.height = currentViewport.height;
+        page.render({
+          canvasContext: ctx,
+          viewport: currentViewport,
+        });
 
-    await page.render({
-      canvasContext: ctx,
-      viewport: currentViewport,
+        /* === Extract text from PDF === */
+        const textContent = await page.getTextContent();
+        const items = textContent.items.map((i) => i.str.trim());
+
+        extractedRegNumber = "";
+
+        // 1. Cari label "Nomor Pendaftaran"
+        let labelIdx = items.findIndex(
+          (txt) => txt.replace(/\s+/g, "").toLowerCase() === "nomorpendaftaran"
+        );
+
+        // 2. Ambil angka sebelum label (INI NOMOR PENDAFTARAN YANG BENAR)
+        if (labelIdx !== -1) {
+          for (let i = labelIdx - 1; i >= 0; i--) {
+            let part = items[i];
+            if (!part) continue;
+
+            if (/^\d+$/.test(part)) {
+              extractedRegNumber = part;
+              break;
+            }
+          }
+        }
+
+        // 3. Fallback jika gagal
+        if (!extractedRegNumber) {
+          const fallback = items.join(" ").match(/\b\d{5,20}\b/);
+          extractedRegNumber = fallback ? fallback[0] : "UNKNOWN";
+        }
+
+        console.log("Nomor Pendaftaran FINAL:", extractedRegNumber);
+      });
     });
-
-    // Extract nomor pendaftaran untuk preview pertama (optional, untuk debugging)
-    const textContent = await page.getTextContent();
-    const items = textContent.items.map((i) => i.str || "");
-    extractedRegNumber = extractRegFromItems(items);
-    console.log("Nomor Pendaftaran PREVIEW:", extractedRegNumber);
   };
 
   reader.readAsArrayBuffer(file);
-}
+});
 
 /* ===========================================================
-   FUNGSI BANTU: HITUNG POSISI MARKER DI KOORDINAT PDF
-   (PAKAI DOM MARKER + VIEWPORT PERTAMA)
+   DOWNLOAD PDF DENGAN MARKER
 =========================================================== */
-function computeMarkerBoxForPage(page) {
-  const { height: pdfH } = page.getSize();
+async function downloadPDF() {
+  if (!originalPdfBytes || !currentViewport) {
+    alert("Upload PDF terlebih dahulu.");
+    return;
+  }
+
+  const pdfDoc = await PDFLib.PDFDocument.load(originalPdfBytes);
+  const page = pdfDoc.getPages()[0];
+  const { width: pdfW, height: pdfH } = page.getSize();
+  const helvFont = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
 
   const canvas = document.getElementById("pdf-canvas");
   const marker = document.getElementById("marker-box");
@@ -180,27 +157,12 @@ function computeMarkerBoxForPage(page) {
   const htmlWidth = markerRect.width;
   const htmlHeight = markerRect.height;
 
-  // Skala diambil dari viewport pertama
-  const s = currentViewport ? currentViewport.scale : 1;
+  const s = currentViewport.scale;
 
   const pdfX = htmlLeft / s;
   const pdfY = pdfH - htmlTop / s - htmlHeight / s;
   const boxW = htmlWidth / s;
   const boxH = htmlHeight / s;
-
-  return { pdfX, pdfY, boxW, boxH, s, pdfH };
-}
-
-/* ===========================================================
-   FUNGSI: PROSES SATU PDF (TAMBAH MARKER)
-=========================================================== */
-async function processSinglePDF(uint8Array) {
-  const pdfDoc = await PDFLib.PDFDocument.load(uint8Array);
-  const page = pdfDoc.getPages()[0];
-  const helvFont = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
-
-  // Hitung posisi marker di PDF
-  const { pdfX, pdfY, boxW, boxH, s } = computeMarkerBoxForPage(page);
 
   // Draw Box
   page.drawRectangle({
@@ -291,63 +253,29 @@ async function processSinglePDF(uint8Array) {
   drawRow(colRightX, 1, "Tanggal", go_tgl.value);
   drawRow(colRightX, 2, "Jam", go_jam.value);
 
+  /* === DOWNLOAD PDF === */
   const finalPdf = await pdfDoc.save();
-  return finalPdf;
-}
+  const blob = new Blob([finalPdf], { type: "application/pdf" });
 
-/* ===========================================================
-   DOWNLOAD SEMUA PDF (BATCH) → ZIP
-=========================================================== */
-async function downloadAllPDF() {
-  if (!pdfFiles.length) {
-    alert("Upload beberapa file PDF terlebih dahulu.");
-    return;
-  }
-
-  if (!currentViewport) {
-    alert("Tunggu sampai preview PDF pertama tampil terlebih dahulu.");
-    return;
-  }
+  const safeName = extractedRegNumber.replace(/[\\/:*?"<>|]/g, "-") + ".pdf";
 
   try {
-    const zip = new JSZip();
+    const handle = await window.showSaveFilePicker({
+      suggestedName: `SPPB_${safeName}`,
+      types: [
+        {
+          description: "PDF Document",
+          accept: { "application/pdf": [".pdf"] },
+        },
+      ],
+    });
 
-    for (const file of pdfFiles) {
-      const arrayBuffer = await file.arrayBuffer();
-      const uint8Array = new Uint8Array(arrayBuffer);
+    const writable = await handle.createWritable();
+    await writable.write(blob);
+    await writable.close();
 
-      // Extract nomor pendaftaran per file (untuk penamaan)
-      let regNumber = "";
-      try {
-        regNumber = await extractRegNumberFromBytes(uint8Array);
-      } catch (err) {
-        console.log("Gagal extract nomor pendaftaran:", err);
-      }
-
-      const processedBytes = await processSinglePDF(uint8Array);
-
-      const baseName =
-        regNumber && regNumber !== "UNKNOWN"
-          ? regNumber
-          : file.name.replace(/\.pdf$/i, "");
-
-      const safeName = baseName.replace(/[\\/:*?"<>|]/g, "-") + ".pdf";
-
-      zip.file(`SPPB_${safeName}`, processedBytes);
-    }
-
-    const zipBlob = await zip.generateAsync({ type: "blob" });
-
-    const url = URL.createObjectURL(zipBlob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "SPPB_MARKED_ALL.zip";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
+    alert("File berhasil disimpan.");
   } catch (err) {
-    console.error("Gagal membuat ZIP:", err);
-    alert("Terjadi kesalahan saat membuat ZIP.");
+    console.log("Save canceled or failed:", err);
   }
 }
