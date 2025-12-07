@@ -296,7 +296,7 @@ async function processSinglePDF(uint8Array) {
 }
 
 /* ===========================================================
-   DOWNLOAD SEMUA PDF (BATCH) → ZIP
+   DOWNLOAD PDF: SINGLE = langsung, MULTI = ZIP
 =========================================================== */
 async function downloadAllPDF() {
   if (!pdfFiles.length) {
@@ -310,13 +310,58 @@ async function downloadAllPDF() {
   }
 
   try {
+    /* =========================================
+       CASE 1 — HANYA 1 FILE → DOWNLOAD LANGSUNG
+    ========================================= */
+    if (pdfFiles.length === 1) {
+      const file = pdfFiles[0];
+      const arrayBuffer = await file.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+
+      // extract nomor pendaftaran
+      let regNumber = "";
+      try {
+        regNumber = await extractRegNumberFromBytes(uint8Array);
+      } catch (err) {
+        console.log("Gagal extract nomor pendaftaran:", err);
+      }
+
+      // proses PDF
+      const processedBytes = await processSinglePDF(uint8Array);
+
+      // nama file
+      const baseName =
+        regNumber && regNumber !== "UNKNOWN"
+          ? regNumber
+          : file.name.replace(/\.pdf$/i, "");
+
+      const safeName = baseName.replace(/[\\/:*?"<>|]/g, "-") + ".pdf";
+
+      // buat blob dan download
+      const blob = new Blob([processedBytes], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `SPPB_${safeName}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      return; // STOP — tidak lanjut ke ZIP
+    }
+
+    /* =========================================
+       CASE 2 — LEBIH DARI 1 FILE → ZIP
+    ========================================= */
     const zip = new JSZip();
 
     for (const file of pdfFiles) {
       const arrayBuffer = await file.arrayBuffer();
       const uint8Array = new Uint8Array(arrayBuffer);
 
-      // Extract nomor pendaftaran per file (untuk penamaan)
+      // extract nomor pendaftaran per file
       let regNumber = "";
       try {
         regNumber = await extractRegNumberFromBytes(uint8Array);
@@ -337,8 +382,8 @@ async function downloadAllPDF() {
     }
 
     const zipBlob = await zip.generateAsync({ type: "blob" });
-
     const url = URL.createObjectURL(zipBlob);
+
     const a = document.createElement("a");
     a.href = url;
     a.download = "SPPB_MARKED_ALL.zip";
