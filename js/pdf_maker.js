@@ -292,8 +292,8 @@ async function processSinglePDF(uint8Array) {
   });
 
   const bodySize = 7;
-  const paddingTopPx = 14;
-  const rowGapPx = 12;
+  const paddingTopPx = 12;
+  const rowGapPx = 14;
 
   const baseXLeft = pdfX + 10 / s;
   const baseXRight = pdfX + boxW / 2 + 10 / s;
@@ -307,7 +307,7 @@ async function processSinglePDF(uint8Array) {
       x: colX,
       y,
       size: bodySize,
-      font: helvFont,
+      font: helvBold,
     });
 
     page.drawText(":", {
