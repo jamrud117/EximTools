@@ -140,7 +140,7 @@ function loadFirstPreview(file) {
     const page = await pdf.getPage(1);
 
     // Viewport untuk canvas
-    currentViewport = page.getViewport({ scale: 1.3 });
+    currentViewport = page.getViewport({ scale: 1 });
 
     const canvas = document.getElementById("pdf-canvas");
     const ctx = canvas.getContext("2d");
@@ -208,7 +208,7 @@ async function processSinglePDF(uint8Array) {
     y: pdfY,
     width: boxW,
     height: boxH,
-    borderWidth: 2,
+    borderWidth: 1.2,
     borderColor: PDFLib.rgb(0, 0, 0),
   });
 
@@ -229,7 +229,7 @@ async function processSinglePDF(uint8Array) {
   });
 
   // Header text
-  const headerSize = 11;
+  const headerSize = 12;
   const textLeft = "SELESAI STUFFING";
   const textRight = "GATE OUT";
 
@@ -253,9 +253,9 @@ async function processSinglePDF(uint8Array) {
   });
 
   // Body text
-  const bodySize = 10;
-  const paddingTopPx = 22;
-  const rowGapPx = 23;
+  const bodySize = 11;
+  const paddingTopPx = 18;
+  const rowGapPx = 20;
 
   const baseY = pdfY + boxH - headerH - paddingTopPx / s - bodySize * 0.2;
 

@@ -107,14 +107,14 @@ body {
 /* Marker Box (sama persis seperti desain asli) */
 #marker-box {
   position: absolute;
-  top: 570px;
-  left: 317px;
-  width: 380px;
+  top: 410px;
+  left: 240px;
+  width: 290px;
   border: 2px solid #000;
   display: flex;
   flex-direction: column;
   background: transparent;
-  font-size: 13px;
+  font-size: 10px;
   box-sizing: border-box;
 }
 
