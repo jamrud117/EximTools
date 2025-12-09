@@ -20,43 +20,104 @@ function todayDDMMYYYY() {
 }
 
 /* ===============================
+   KONVERSI TANGGAL → HARI
+================================ */
+function getHariFromTanggal(tgl) {
+  if (!tgl) return "";
+  const [dd, mm, yyyy] = tgl.split("-").map(Number);
+  const dateObj = new Date(yyyy, mm - 1, dd);
+
+  const hariList = [
+    "Minggu",
+    "Senin",
+    "Selasa",
+    "Rabu",
+    "Kamis",
+    "Jumat",
+    "Sabtu",
+  ];
+
+  return hariList[dateObj.getDay()];
+}
+
+/* ===============================
+   TAMBAH 15 MENIT UNTUK GATE OUT
+================================ */
+function add15Minutes(jamStr) {
+  if (!jamStr || !jamStr.includes(".")) return "";
+
+  let [hh, mm] = jamStr.split(".").map(Number);
+
+  let total = hh * 60 + mm + 15;
+  hh = Math.floor(total / 60);
+  mm = total % 60;
+
+  if (hh >= 24) hh -= 24;
+
+  return `${String(hh).padStart(2, "0")}.${String(mm).padStart(2, "0")}`;
+}
+
+/* ===============================
    GLOBAL VARIABLES
 ================================ */
 let originalPdfBytes = null;
 let currentViewport = null;
-let extractedRegNumber = ""; // nomor pendaftaran untuk preview pertama
-let pdfFiles = []; // semua file PDF yang diupload
+let extractedRegNumber = "";
+let pdfFiles = [];
 
 /* ===============================
-   DEFAULT VALUE
+   DEFAULT VALUE ON PAGE LOAD
 ================================ */
 window.onload = function () {
-  go_tgl.value = todayDDMMYYYY();
-  ss_tgl.value = todayDDMMYYYY();
+  const today = todayDDMMYYYY();
+  const todayHari = getHariFromTanggal(today);
+
+  ss_tgl.value = today;
+  go_tgl.value = today;
+
+  ss_hari.value = todayHari;
+  go_hari.value = todayHari;
+
   updateBox();
 };
 
 /* ===============================
-   AUTO COPY SS → GO
+   AUTO COPY SS → GO (HARI & TANGGAL SAJA)
 ================================ */
-ss_hari.addEventListener("input", () => {
-  go_hari.value = ss_hari.value;
-  updateBox();
-});
-
 ss_tgl.addEventListener("input", () => {
+  ss_hari.value = getHariFromTanggal(ss_tgl.value);
+
   go_tgl.value = ss_tgl.value;
+  go_hari.value = ss_hari.value;
+
   updateBox();
 });
 
-// Update preview real-time
-[ss_hari, ss_tgl, ss_jam, go_hari, go_tgl, go_jam].forEach((input) => {
-  input.addEventListener("input", updateBox);
+go_tgl.addEventListener("input", () => {
+  go_hari.value = getHariFromTanggal(go_tgl.value);
+  updateBox();
+});
+
+/* ===============================
+   AUTO HITUNG JAM GATE OUT (+15 MENIT)
+================================ */
+ss_jam.addEventListener("input", () => {
+  const autoGO = add15Minutes(ss_jam.value);
+
+  if (autoGO) {
+    go_jam.value = autoGO;
+  }
+
+  updateBox();
 });
 
 /* ===============================
    UPDATE LIVE PREVIEW BOX
 ================================ */
+[ss_hari, ss_tgl, ss_jam, go_hari, go_tgl, go_jam].forEach((input) => {
+  input.addEventListener("input", updateBox);
+});
+
 function updateBox() {
   o_ss_hari.innerText = ss_hari.value;
   o_ss_tgl.innerText = ss_tgl.value;
@@ -68,25 +129,21 @@ function updateBox() {
 }
 
 /* ===========================================================
-   FUNGSI BANTU: EXTRACT NOMOR PENDAFTARAN DARI ITEMS TEKS
+   EXTRACT NOMOR PENDAFTARAN
 =========================================================== */
 function extractRegFromItems(items) {
   let reg = "";
 
-  // Normalisasi teks
   const trimmed = items.map((i) => (i || "").toString().trim());
 
-  // 1. Cari label "Nomor Pendaftaran"
   let labelIdx = trimmed.findIndex(
     (txt) => txt.replace(/\s+/g, "").toLowerCase() === "nomorpendaftaran"
   );
 
-  // 2. Ambil angka sebelum label (INI NOMOR PENDAFTARAN YANG BENAR)
   if (labelIdx !== -1) {
     for (let i = labelIdx - 1; i >= 0; i--) {
       let part = trimmed[i];
       if (!part) continue;
-
       if (/^\d+$/.test(part)) {
         reg = part;
         break;
@@ -94,7 +151,6 @@ function extractRegFromItems(items) {
     }
   }
 
-  // 3. Fallback jika gagal
   if (!reg) {
     const fallbackMatch = trimmed.join(" ").match(/\b\d{5,20}\b/);
     reg = fallbackMatch ? fallbackMatch[0] : "UNKNOWN";
@@ -103,9 +159,6 @@ function extractRegFromItems(items) {
   return reg;
 }
 
-/* ===========================================================
-   FUNGSI BANTU: EXTRACT NOMOR DARI BYTE PDF (UNTUK BATCH)
-=========================================================== */
 async function extractRegNumberFromBytes(uint8Array) {
   const pdf = await pdfjsLib.getDocument(uint8Array).promise;
   const page = await pdf.getPage(1);
@@ -115,7 +168,7 @@ async function extractRegNumberFromBytes(uint8Array) {
 }
 
 /* ===========================================================
-   LOAD PDF PERTAMA + PREVIEW + EXTRACT REG
+   LOAD PDF + PREVIEW
 =========================================================== */
 document.getElementById("pdf-file").addEventListener("change", function () {
   const files = Array.from(this.files || []);
@@ -123,10 +176,8 @@ document.getElementById("pdf-file").addEventListener("change", function () {
 
   if (!pdfFiles.length) return;
 
-  // Tampilkan marker-box
   document.getElementById("marker-box").classList.remove("hidden");
 
-  // Load dan preview hanya PDF pertama
   loadFirstPreview(pdfFiles[0]);
 });
 
@@ -139,7 +190,6 @@ function loadFirstPreview(file) {
     const pdf = await pdfjsLib.getDocument(originalPdfBytes).promise;
     const page = await pdf.getPage(1);
 
-    // Viewport untuk canvas
     currentViewport = page.getViewport({ scale: 1 });
 
     const canvas = document.getElementById("pdf-canvas");
@@ -147,12 +197,8 @@ function loadFirstPreview(file) {
     canvas.width = currentViewport.width;
     canvas.height = currentViewport.height;
 
-    await page.render({
-      canvasContext: ctx,
-      viewport: currentViewport,
-    });
+    await page.render({ canvasContext: ctx, viewport: currentViewport });
 
-    // Extract nomor pendaftaran untuk preview pertama (optional, untuk debugging)
     const textContent = await page.getTextContent();
     const items = textContent.items.map((i) => i.str || "");
     extractedRegNumber = extractRegFromItems(items);
@@ -163,8 +209,7 @@ function loadFirstPreview(file) {
 }
 
 /* ===========================================================
-   FUNGSI BANTU: HITUNG POSISI MARKER DI KOORDINAT PDF
-   (PAKAI DOM MARKER + VIEWPORT PERTAMA)
+   HITUNG POSISI MARKER DI KOORDINAT PDF
 =========================================================== */
 function computeMarkerBoxForPage(page) {
   const { height: pdfH } = page.getSize();
@@ -180,7 +225,6 @@ function computeMarkerBoxForPage(page) {
   const htmlWidth = markerRect.width;
   const htmlHeight = markerRect.height;
 
-  // Skala diambil dari viewport pertama
   const s = currentViewport ? currentViewport.scale : 1;
 
   const pdfX = htmlLeft / s;
@@ -192,111 +236,112 @@ function computeMarkerBoxForPage(page) {
 }
 
 /* ===========================================================
-   FUNGSI: PROSES SATU PDF (TAMBAH MARKER)
+   PROSES SATU PDF (DRAW MARKER)
 =========================================================== */
 async function processSinglePDF(uint8Array) {
   const pdfDoc = await PDFLib.PDFDocument.load(uint8Array);
   const page = pdfDoc.getPages()[0];
   const helvFont = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+  const helvBold = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
 
-  // Hitung posisi marker di PDF
   const { pdfX, pdfY, boxW, boxH, s } = computeMarkerBoxForPage(page);
 
-  // Draw Box
   page.drawRectangle({
     x: pdfX,
     y: pdfY,
     width: boxW,
     height: boxH,
-    borderWidth: 1.2,
+    borderWidth: 1,
     borderColor: PDFLib.rgb(0, 0, 0),
   });
 
-  // Header line
-  const headerHeightPx = 25;
+  const headerHeightPx = 20;
   const headerH = headerHeightPx / s;
 
   page.drawLine({
     start: { x: pdfX, y: pdfY + boxH - headerH },
     end: { x: pdfX + boxW, y: pdfY + boxH - headerH },
-    thickness: 2,
+    thickness: 1,
   });
 
   page.drawLine({
     start: { x: pdfX + boxW / 2, y: pdfY },
     end: { x: pdfX + boxW / 2, y: pdfY + boxH },
-    thickness: 2,
+    thickness: 1,
   });
 
-  // Header text
-  const headerSize = 12;
-  const textLeft = "SELESAI STUFFING";
-  const textRight = "GATE OUT";
+  const headerSize = 6;
 
-  const leftW = helvFont.widthOfTextAtSize(textLeft, headerSize);
-  const rightW = helvFont.widthOfTextAtSize(textRight, headerSize);
+  const leftW = helvBold.widthOfTextAtSize("SELESAI STUFFING", headerSize);
+  const rightW = helvBold.widthOfTextAtSize("GATE OUT", headerSize);
 
   const headerCenterY = pdfY + boxH - headerH / 2 - headerSize * 0.35;
 
-  page.drawText(textLeft, {
+  page.drawText("SELESAI STUFFING", {
     x: pdfX + boxW / 4 - leftW / 2,
     y: headerCenterY,
     size: headerSize,
-    font: helvFont,
+    font: helvBold,
   });
 
-  page.drawText(textRight, {
+  page.drawText("GATE OUT", {
     x: pdfX + (3 * boxW) / 4 - rightW / 2,
     y: headerCenterY,
     size: headerSize,
-    font: helvFont,
+    font: helvBold,
   });
 
-  // Body text
-  const bodySize = 11;
-  const paddingTopPx = 18;
-  const rowGapPx = 20;
+  const bodySize = 7;
+  const paddingTopPx = 14;
+  const rowGapPx = 12;
 
+  const baseXLeft = pdfX + 10 / s;
+  const baseXRight = pdfX + boxW / 2 + 10 / s;
   const baseY = pdfY + boxH - headerH - paddingTopPx / s - bodySize * 0.2;
-
-  const colPaddingPx = 10;
-  const labelWidthPx = 55;
-  const colonWidthPx = 10;
-
-  const colLeftX = pdfX + colPaddingPx / s;
-  const colRightX = pdfX + boxW / 2 + colPaddingPx / s;
 
   function drawRow(colX, rowIndex, label, value) {
     const y = baseY - (rowIndex * rowGapPx) / s;
+    const labelWidthPx = 30;
 
-    const labelX = colX;
-    const colonX = colX + labelWidthPx / s;
-    const valueX = colX + (labelWidthPx + colonWidthPx) / s;
+    page.drawText(label, {
+      x: colX,
+      y,
+      size: bodySize,
+      font: helvFont,
+    });
 
-    page.drawText(label, { x: labelX, y, size: bodySize, font: helvFont });
-    page.drawText(":", { x: colonX, y, size: bodySize, font: helvFont });
+    page.drawText(":", {
+      x: colX + labelWidthPx / s,
+      y,
+      size: bodySize,
+      font: helvFont,
+    });
 
     if (value) {
-      page.drawText(value, { x: valueX, y, size: bodySize, font: helvFont });
+      page.drawText(value, {
+        x: colX + (labelWidthPx + 7) / s,
+        y,
+        size: bodySize,
+        font: helvFont,
+      });
     }
   }
 
   // SS
-  drawRow(colLeftX, 0, "Hari", ss_hari.value);
-  drawRow(colLeftX, 1, "Tanggal", ss_tgl.value);
-  drawRow(colLeftX, 2, "Jam", ss_jam.value);
+  drawRow(baseXLeft, 0, "Hari", ss_hari.value);
+  drawRow(baseXLeft, 1, "Tanggal", ss_tgl.value);
+  drawRow(baseXLeft, 2, "Jam", ss_jam.value);
 
   // GO
-  drawRow(colRightX, 0, "Hari", go_hari.value);
-  drawRow(colRightX, 1, "Tanggal", go_tgl.value);
-  drawRow(colRightX, 2, "Jam", go_jam.value);
+  drawRow(baseXRight, 0, "Hari", go_hari.value);
+  drawRow(baseXRight, 1, "Tanggal", go_tgl.value);
+  drawRow(baseXRight, 2, "Jam", go_jam.value);
 
-  const finalPdf = await pdfDoc.save();
-  return finalPdf;
+  return await pdfDoc.save();
 }
 
 /* ===========================================================
-   DOWNLOAD PDF: SINGLE = langsung, MULTI = ZIP
+   DOWNLOAD PDF (SINGLE / ZIP)
 =========================================================== */
 async function downloadAllPDF() {
   if (!pdfFiles.length) {
@@ -310,26 +355,18 @@ async function downloadAllPDF() {
   }
 
   try {
-    /* =========================================
-       CASE 1 — HANYA 1 FILE → DOWNLOAD LANGSUNG
-    ========================================= */
     if (pdfFiles.length === 1) {
       const file = pdfFiles[0];
       const arrayBuffer = await file.arrayBuffer();
       const uint8Array = new Uint8Array(arrayBuffer);
 
-      // extract nomor pendaftaran
       let regNumber = "";
       try {
         regNumber = await extractRegNumberFromBytes(uint8Array);
-      } catch (err) {
-        console.log("Gagal extract nomor pendaftaran:", err);
-      }
+      } catch {}
 
-      // proses PDF
       const processedBytes = await processSinglePDF(uint8Array);
 
-      // nama file
       const baseName =
         regNumber && regNumber !== "UNKNOWN"
           ? regNumber
@@ -337,7 +374,6 @@ async function downloadAllPDF() {
 
       const safeName = baseName.replace(/[\\/:*?"<>|]/g, "-") + ".pdf";
 
-      // buat blob dan download
       const blob = new Blob([processedBytes], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
 
@@ -349,25 +385,20 @@ async function downloadAllPDF() {
       a.remove();
       URL.revokeObjectURL(url);
 
-      return; // STOP — tidak lanjut ke ZIP
+      return;
     }
 
-    /* =========================================
-       CASE 2 — LEBIH DARI 1 FILE → ZIP
-    ========================================= */
+    // MULTI → ZIP
     const zip = new JSZip();
 
     for (const file of pdfFiles) {
       const arrayBuffer = await file.arrayBuffer();
       const uint8Array = new Uint8Array(arrayBuffer);
 
-      // extract nomor pendaftaran per file
       let regNumber = "";
       try {
         regNumber = await extractRegNumberFromBytes(uint8Array);
-      } catch (err) {
-        console.log("Gagal extract nomor pendaftaran:", err);
-      }
+      } catch {}
 
       const processedBytes = await processSinglePDF(uint8Array);
 
