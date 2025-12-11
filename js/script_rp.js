@@ -263,23 +263,47 @@ function renderPreview(dataArr) {
 }
 
 function generateResultText(dataArr) {
-  const jenisTrx = [
-    ...new Set(dataArr.map((d) => d.jenistrx).filter(Boolean)),
-  ].join(" | ");
+  // ---- PENGIRIM & INPUT USER ----
   const pengirim = [
     ...new Set(dataArr.map((d) => d.pengirim).filter(Boolean)),
   ].join(" | ");
-  const bcList = [...new Set(dataArr.map((d) => d.bc).filter(Boolean))].join(
-    ", "
-  );
-  const segel = dataArr.find((d) => d.segel)?.segel || "";
-  const tanggalArr = [];
+  const jenisBarang = $("jenisBarang").value;
 
-  const kemasanMap = {};
-  const barangMap = {};
+  const masukTglVal = $("masukTgl").value;
+  const masukTxt = masukTglVal ? fmtDate(new Date(masukTglVal)) : "";
+
+  // ---- GRUP BC BERDASARKAN JENIS TRANSAKSI ----
+  const bcByJenis = {};
+
+  // ---- KUMPULKAN SEGEL TANPA PENGELOMPOKKAN ----
+  const segelList = [];
 
   dataArr.forEach((d) => {
-    if (d.kemasan && typeof d.kemasan === "object") {
+    const jenis = d.jenistrx || "LAINNYA";
+
+    // kelompokkan BC
+    if (!bcByJenis[jenis]) bcByJenis[jenis] = [];
+    if (d.bc) bcByJenis[jenis].push(d.bc);
+
+    // segel tidak digrup, langsung kumpulkan
+    if (d.segel) segelList.push(d.segel);
+  });
+
+  // format BC terkelompok
+  const bcText = Object.entries(bcByJenis)
+    .map(([jenis, list]) => `No BC 2.7 ( ${jenis} ) : ${list.join(", ")}`)
+    .join("\n");
+
+  // format segel seperti sebelumnya (gabungan semua)
+  const segelText = `No Segel : ${segelList.join(", ")}`;
+
+  // ---- KEMASAN & BARANG ----
+  const kemasanMap = {};
+  const barangMap = {};
+  const tanggalArr = [];
+
+  dataArr.forEach((d) => {
+    if (d.kemasan) {
       for (const [unit, qty] of Object.entries(d.kemasan)) {
         kemasanMap[unit] = (kemasanMap[unit] || 0) + qty;
       }
@@ -302,16 +326,14 @@ function generateResultText(dataArr) {
     .join(" + ");
 
   const tanggalDoc = formatTanggalDokumen(tanggalArr);
-  const masukTglVal = $("masukTgl").value;
-  const masukTxt = masukTglVal ? fmtDate(new Date(masukTglVal)) : "";
 
+  // ---- HASIL AKHIR ----
   return [
     "*BC 2.7 Masuk*",
-    `Jenis Transaksi : ${jenisTrx}`,
     `Pengirim : ${pengirim}`,
-    `No BC 2.7 : ${bcList}`,
-    `No Segel : ${segel}`,
-    `Jenis Barang : ${$("jenisBarang").value}`,
+    bcText,
+    segelText,
+    `Jenis Barang : ${jenisBarang}`,
     `Jumlah kemasan : ${kemasanText}`,
     `Jumlah barang : ${barangText}`,
     `Tanggal Dokumen : ${tanggalDoc}`,
