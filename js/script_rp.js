@@ -76,7 +76,7 @@ function extractDataFromWorkbook(file, wb) {
   const bc = getCell(wb, "HEADER", "CP2") || "";
   const segel = getCell(wb, "HEADER", "BC2") || "";
 
-  // ---- ambil semua data kemasan ----
+  // ---- KEMASAN ----
   const sheetKemasan = wb.Sheets["KEMASAN"];
   let kemasanMap = {};
 
@@ -86,20 +86,17 @@ function extractDataFromWorkbook(file, wb) {
     let kodeIdx = -1,
       jumlahIdx = -1;
 
-    // cari kolom berdasarkan nama header
-    for (let i = 0; i < header.length; i++) {
-      const val = String(header[i] || "")
+    header.forEach((h, i) => {
+      const v = String(h || "")
         .trim()
         .toUpperCase();
-      if (val === "KODE KEMASAN") kodeIdx = i;
-      if (val === "JUMLAH KEMASAN") jumlahIdx = i;
-    }
+      if (v === "KODE KEMASAN") kodeIdx = i;
+      if (v === "JUMLAH KEMASAN") jumlahIdx = i;
+    });
 
-    // fallback jika header tidak ditemukan (anggap C=kode, D=jumlah)
     if (kodeIdx === -1) kodeIdx = 2;
     if (jumlahIdx === -1) jumlahIdx = 3;
 
-    // iterasi semua baris data
     for (let r = 1; r < dataKemasan.length; r++) {
       const kode = String(dataKemasan[r][kodeIdx] || "").trim();
       const qty = Number(dataKemasan[r][jumlahIdx]) || 0;
@@ -108,82 +105,92 @@ function extractDataFromWorkbook(file, wb) {
     }
   }
 
-  const barangUnit = getCell(wb, "BARANG", "J2");
-  let barangTotal = 0;
+  // ---- BARANG (LOGIKA BARU, TANPA MENGHAPUS OUTPUT LAMA) ----
+  let barangMap = {}; // multi satuan
+  let barangTotal = 0; // total legacy
+  let barangUnit = ""; // legacy (diisi jika hanya satu satuan)
   let namaBarang = [];
 
   const sheetBarang = wb.Sheets["BARANG"];
   if (sheetBarang && sheetBarang["!ref"]) {
     const dataBarang = XLSX.utils.sheet_to_json(sheetBarang, { header: 1 });
+    const header = dataBarang[0] || [];
 
-    // cari kolom header "URAIAN"
-    const headerRow = dataBarang[0] || [];
-    const uraianIdx = headerRow.findIndex(
-      (h) => String(h).trim().toUpperCase() === "URAIAN"
-    );
+    let uraianIdx = -1;
+    let jumlahIdx = -1;
+    let satuanIdx = -1;
 
-    // jika kolom ditemukan, ambil semua nilainya
-    if (uraianIdx !== -1) {
-      const namaArr = [];
-      for (let r = 1; r < dataBarang.length; r++) {
-        const nama = dataBarang[r][uraianIdx];
-        if (nama) namaArr.push(String(nama).trim());
+    header.forEach((h, i) => {
+      const v = String(h || "")
+        .trim()
+        .toUpperCase();
+      if (v === "URAIAN") uraianIdx = i;
+
+      if (v === "JUMLAH" || v === "JUMLAH BARANG" || v === "JUMLAH SATUAN")
+        jumlahIdx = i;
+
+      if (
+        v === "SATUAN" ||
+        v === "KODE SATUAN" ||
+        v === "SATUAN BARANG" ||
+        v === "KODE SATUAN BARANG" ||
+        v === "KODE SATUAN JUMLAH"
+      )
+        satuanIdx = i;
+    });
+
+    if (jumlahIdx === -1) jumlahIdx = 9;
+    if (satuanIdx === -1) satuanIdx = 10;
+
+    for (let r = 1; r < dataBarang.length; r++) {
+      const row = dataBarang[r];
+      const qty = Number(row[jumlahIdx]) || 0;
+      const unit = String(row[satuanIdx] || "").trim();
+
+      if (qty > 0 && unit) {
+        barangMap[unit] = (barangMap[unit] || 0) + qty;
+        barangTotal += qty;
+        if (!barangUnit) barangUnit = unit;
       }
-      namaBarang = [...new Set(namaArr)];
-    }
 
-    // hitung total barang (kolom J -> index 10)
-    const range = XLSX.utils.decode_range(sheetBarang["!ref"]);
-    for (let R = range.s.r; R <= range.e.r; ++R) {
-      const addr = XLSX.utils.encode_cell({ c: 10, r: R });
-      const cell = sheetBarang[addr];
-      if (cell && !isNaN(cell.v)) barangTotal += Number(cell.v);
+      if (uraianIdx !== -1 && row[uraianIdx]) {
+        namaBarang.push(String(row[uraianIdx]).trim());
+      }
     }
   }
 
   const t = getCell(wb, "HEADER", "CF2");
   const aju = getCell(wb, "HEADER", "A2") || "";
-  const jenistrx = getCell(wb, "HEADER", "N2");
-  let jenisTransaksi = "";
-  const n2Val = jenistrx;
+  const n2Val = getCell(wb, "HEADER", "N2");
 
-  switch (String(n2Val).trim()) {
-    case "1":
-      jenisTransaksi = "PENYERAHAN BKP";
-      break;
-    case "2":
-      jenisTransaksi = "PENYERAHAN JKP";
-      break;
-    case "3":
-      jenisTransaksi = "RETUR";
-      break;
-    case "4":
-      jenisTransaksi = "NON PENYERAHAN";
-      break;
-    case "5":
-      jenisTransaksi = "LAINNYA";
-      break;
-    default:
-      jenisTransaksi = "TIDAK DIKETAHUI";
-  }
+  const jenisMap = {
+    1: "PENYERAHAN BKP",
+    2: "PENYERAHAN JKP",
+    3: "RETUR",
+    4: "NON PENYERAHAN",
+    5: "LAINNYA",
+  };
 
   return {
-    jenistrx: jenisTransaksi,
+    jenistrx: jenisMap[String(n2Val).trim()] || "TIDAK DIKETAHUI",
     aju,
     pengirim,
     bc,
     segel,
     kemasan: kemasanMap,
-    barang: { unit: barangUnit, total: barangTotal },
+    barang: {
+      map: barangMap, // BARU (multi satuan)
+      total: barangTotal, // LAMA (tidak dihapus)
+      unit: barangUnit, // LAMA (tidak dihapus)
+    },
     tanggal: t ? new Date(t) : null,
-    namaBarang,
+    namaBarang: [...new Set(namaBarang)],
   };
 }
 
-// ---------- format tanggal dokumen (versi cerdas) ----------
+// ---------- format tanggal dokumen ----------
 function formatTanggalDokumen(arr) {
   if (!arr.length) return "";
-
   const sorted = [...new Set(arr.map((t) => t.getTime()))]
     .map((t) => new Date(t))
     .sort((a, b) => a - b);
@@ -193,50 +200,31 @@ function formatTanggalDokumen(arr) {
   let end = sorted[0];
 
   for (let i = 1; i < sorted.length; i++) {
-    const prev = end;
-    const current = sorted[i];
-    const diff = (current - prev) / (1000 * 3600 * 24);
-
-    if (
-      diff === 1 &&
-      current.getMonth() === start.getMonth() &&
-      current.getFullYear() === start.getFullYear()
-    ) {
-      end = current;
-    } else {
+    const cur = sorted[i];
+    if ((cur - end) / 86400000 === 1) end = cur;
+    else {
       groups.push([start, end]);
-      start = current;
-      end = current;
+      start = end = cur;
     }
   }
   groups.push([start, end]);
 
-  const formattedGroups = groups.map(([s, e]) => {
-    const dd1 = String(s.getDate()).padStart(2, "0");
-    const dd2 = String(e.getDate()).padStart(2, "0");
-    const mm = String(s.getMonth() + 1).padStart(2, "0");
-    const yy = s.getFullYear();
-
-    if (s.getTime() === e.getTime()) {
-      return `${dd1}/${mm}/${yy}`;
-    } else {
-      return `${dd1}-${dd2}/${mm}/${yy}`;
-    }
-  });
-
-  return formattedGroups.join(", ");
+  return groups
+    .map(([s, e]) =>
+      s.getTime() === e.getTime()
+        ? fmtDate(s)
+        : `${String(s.getDate()).padStart(2, "0")}-${String(
+            e.getDate()
+          ).padStart(2, "0")}/${String(s.getMonth() + 1).padStart(
+            2,
+            "0"
+          )}/${s.getFullYear()}`
+    )
+    .join(", ");
 }
 
 // ---------- tampilan UI ----------
-function updateFileList(files) {
-  $("fileList").textContent =
-    files.length > 0
-      ? files.map((f) => f.name).join(", ")
-      : "Belum ada file dipilih.";
-}
-
 function renderPreview(dataArr) {
-  // tbody sekarang id="previewTableBody" (langsung tbody)
   const tbody = $("previewTableBody");
   tbody.innerHTML = dataArr
     .map(
@@ -247,96 +235,64 @@ function renderPreview(dataArr) {
         <td>${d.pengirim}</td>
         <td>${d.bc || "-"}</td>
         <td>${Object.entries(d.kemasan)
-          .map(([unit, qty]) => `${fmtNum(qty)} ${unit}`)
+          .map(([u, q]) => `${fmtNum(q)} ${u}`)
           .join("<br>")}</td>
-        <td>${fmtNum(d.barang.total)} ${d.barang.unit || ""}</td>
+        <td>${Object.entries(d.barang.map)
+          .map(([u, q]) => `${fmtNum(q)} ${u}`)
+          .join("<br>")}</td>
         <td>${d.tanggal ? fmtDate(d.tanggal) : ""}</td>
-        <td>${
-          d.namaBarang && d.namaBarang.length ? d.namaBarang.join("<br>") : "-"
-        }</td>
+        <td>${d.namaBarang.join("<br>") || "-"}</td>
       </tr>`
     )
     .join("");
 
-  // tampilkan card preview dengan bootstrap (hapus d-none)
   $("tableWrap").classList.remove("d-none");
 }
 
+// ---------- generate result text ----------
 function generateResultText(dataArr) {
-  // ---- PENGIRIM & INPUT USER ----
   const pengirim = [
     ...new Set(dataArr.map((d) => d.pengirim).filter(Boolean)),
   ].join(" | ");
+
   const jenisBarang = $("jenisBarang").value;
+  const masukTxt = fmtDate(new Date($("masukTgl").value));
 
-  const masukTglVal = $("masukTgl").value;
-  const masukTxt = masukTglVal ? fmtDate(new Date(masukTglVal)) : "";
-
-  // ---- GRUP BC BERDASARKAN JENIS TRANSAKSI ----
   const bcByJenis = {};
-
-  // ---- KUMPULKAN SEGEL TANPA PENGELOMPOKKAN ----
   const segelList = [];
-
-  dataArr.forEach((d) => {
-    const jenis = d.jenistrx || "LAINNYA";
-
-    // kelompokkan BC
-    if (!bcByJenis[jenis]) bcByJenis[jenis] = [];
-    if (d.bc) bcByJenis[jenis].push(d.bc);
-
-    // segel tidak digrup, langsung kumpulkan
-    if (d.segel) segelList.push(d.segel);
-  });
-
-  // format BC terkelompok
-  const bcText = Object.entries(bcByJenis)
-    .map(([jenis, list]) => `No BC 2.7 ( ${jenis} ) : ${list.join(", ")}`)
-    .join("\n");
-
-  // format segel seperti sebelumnya (gabungan semua)
-  const segelText = `No Segel : ${segelList.join(", ")}`;
-
-  // ---- KEMASAN & BARANG ----
   const kemasanMap = {};
   const barangMap = {};
   const tanggalArr = [];
 
   dataArr.forEach((d) => {
-    if (d.kemasan) {
-      for (const [unit, qty] of Object.entries(d.kemasan)) {
-        kemasanMap[unit] = (kemasanMap[unit] || 0) + qty;
-      }
-    }
+    if (!bcByJenis[d.jenistrx]) bcByJenis[d.jenistrx] = [];
+    if (d.bc) bcByJenis[d.jenistrx].push(d.bc);
+    if (d.segel) segelList.push(d.segel);
 
-    if (d.barang.unit) {
-      barangMap[d.barang.unit] =
-        (barangMap[d.barang.unit] || 0) + d.barang.total;
-    }
+    for (const [u, q] of Object.entries(d.kemasan))
+      kemasanMap[u] = (kemasanMap[u] || 0) + q;
+
+    for (const [u, q] of Object.entries(d.barang.map))
+      barangMap[u] = (barangMap[u] || 0) + q;
 
     if (d.tanggal) tanggalArr.push(d.tanggal);
   });
 
-  const kemasanText = Object.entries(kemasanMap)
-    .map(([u, q]) => `${fmtNum(q)} ${u}`)
-    .join(" + ");
-
-  const barangText = Object.entries(barangMap)
-    .map(([u, q]) => `${fmtNum(q)} ${u}`)
-    .join(" + ");
-
-  const tanggalDoc = formatTanggalDokumen(tanggalArr);
-
-  // ---- HASIL AKHIR ----
   return [
     "*BC 2.7 Masuk*",
     `Pengirim : ${pengirim}`,
-    bcText,
-    segelText,
+    ...Object.entries(bcByJenis).map(
+      ([j, l]) => `No BC 2.7 ( ${j} ) : ${l.join(", ")}`
+    ),
+    `No Segel : ${segelList.join(", ")}`,
     `Jenis Barang : ${jenisBarang}`,
-    `Jumlah kemasan : ${kemasanText}`,
-    `Jumlah barang : ${barangText}`,
-    `Tanggal Dokumen : ${tanggalDoc}`,
+    `Jumlah kemasan : ${Object.entries(kemasanMap)
+      .map(([u, q]) => `${fmtNum(q)} ${u}`)
+      .join(" + ")}`,
+    `Jumlah barang : ${Object.entries(barangMap)
+      .map(([u, q]) => `${fmtNum(q)} ${u}`)
+      .join(" + ")}`,
+    `Tanggal Dokumen : ${formatTanggalDokumen(tanggalArr)}`,
     `Masuk Tgl : ${masukTxt}`,
   ].join("\n");
 }
@@ -351,23 +307,18 @@ let selectedFiles = [];
 
 $("files").addEventListener("change", (e) => {
   selectedFiles = Array.from(e.target.files);
-  updateFileList(selectedFiles);
+  $("fileList").textContent = selectedFiles.length
+    ? selectedFiles.map((f) => f.name).join(", ")
+    : "Belum ada file dipilih.";
 });
 
 $("processBtn").addEventListener("click", async () => {
   if (!selectedFiles.length)
-    return Swal.fire({
-      icon: "error",
-      title: "Oops...",
-      scrollbarPadding: false,
-      text: "Pilih minimal 1 file Excel!",
-    });
+    return Swal.fire({ icon: "error", text: "Pilih minimal 1 file Excel!" });
 
   if (!$("jenisBarang").value)
     return Swal.fire({
       icon: "error",
-      title: "Oops...",
-      scrollbarPadding: false,
       text: "Pilih jenis barang terlebih dahulu!",
     });
 
@@ -381,14 +332,6 @@ $("processBtn").addEventListener("click", async () => {
     );
     renderPreview(extracted);
     $("result").value = generateResultText(extracted);
-  } catch (err) {
-    console.error(err);
-    Swal.fire({
-      icon: "error",
-      title: "Oops...",
-      text: "Terjadi kesalahan: " + err.message,
-      scrollbarPadding: false,
-    });
   } finally {
     $("processBtn").disabled = false;
     $("processBtn").textContent = "Proses";
@@ -396,35 +339,17 @@ $("processBtn").addEventListener("click", async () => {
 });
 
 $("copyBtn").addEventListener("click", () => {
-  const text = $("result").value;
-  if (!text)
-    return Swal.fire({
-      icon: "error",
-      title: "Oops...",
-      text: "Belum ada hasil untuk disalin!",
-      scrollbarPadding: false,
-    });
-
-  navigator.clipboard.writeText(text);
-  Swal.fire({
-    position: "top-mid",
-    icon: "success",
-    title: "Teks berhasil disalin ke clipboard!",
-    showConfirmButton: false,
-    scrollbarPadding: false,
-    timer: 1500,
-  });
+  if (!$("result").value) return;
+  navigator.clipboard.writeText($("result").value);
+  Swal.fire({ icon: "success", title: "Disalin!" });
 });
 
 $("clearBtn").addEventListener("click", () => {
   $("files").value = "";
   selectedFiles = [];
-  updateFileList([]);
-
-  // kosongkan preview dan sembunyikan card
+  $("fileList").textContent = "Belum ada file dipilih.";
   $("previewTableBody").innerHTML = "";
   $("tableWrap").classList.add("d-none");
-
   $("result").value = "";
   $("jenisBarang").value = "";
   $("masukTgl").value = new Date().toISOString().slice(0, 10);
