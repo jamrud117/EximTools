@@ -107,6 +107,30 @@ td:first-child {
   background-color: #fafcff;
 }
 
+/* ====== STICKY KOLOM AKSI (KANAN) ====== */
+table th:last-child,
+table td:last-child {
+  position: sticky;
+  right: 0;
+  background: #ffffff;
+  z-index: 3;
+  text-align: center;
+  min-width: 80px;
+}
+
+/* Supaya header Aksi tetap di atas */
+table th:last-child {
+  background-color: #1b2a49;
+  color: #fff;
+  z-index: 4;
+}
+
+/* Garis pemisah kiri agar kelihatan jelas */
+table td:last-child,
+table th:last-child {
+  border-left: 2px solid #ddd;
+}
+
 /* ====== PREVIEW WRAP ====== */
 .preview {
   max-height: 65vh;
