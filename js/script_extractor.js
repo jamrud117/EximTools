@@ -28,6 +28,7 @@ const barangCols = [
 ];
 
 const ekstraksiCols = [
+  "KODE ASAL BB",
   "HS",
   "KODE BARANG",
   "URAIAN",
@@ -233,6 +234,9 @@ function processWorkbook(wb) {
     const hargaFinal = cifExcel === 0 ? hargaExcel : cifFinal * ndpbmGlobal;
 
     return ekstraksiCols.map((c) => {
+      if (c === "KODE ASAL BB") {
+        return header.dokumen == 40 ? 1 : 1;
+      }
       if (c === "KODE DOKUMEN ASAL") return header.dokumen;
       if (c === "KODE KANTOR ASAL") return header.kantor;
       if (c === "NOMOR DAFTAR ASAL") return header.daftar;
