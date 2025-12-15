@@ -235,7 +235,7 @@ function processWorkbook(wb) {
 
     return ekstraksiCols.map((c) => {
       if (c === "KODE ASAL BB") {
-        return header.dokumen == 40 ? 1 : 1;
+        return header.dokumen == 40 ? 1 : 0;
       }
       if (c === "KODE DOKUMEN ASAL") return header.dokumen;
       if (c === "KODE KANTOR ASAL") return header.kantor;
