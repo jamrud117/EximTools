@@ -11,15 +11,20 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
+
+    <!-- Choices.js -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css"
+    />
+
     <link rel="stylesheet" href="./css/style_rp.css" />
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script defer src="./js/script_rp.js"></script>
   </head>
 
-  <!-- Sticky Footer Layout -->
   <body class="d-flex flex-column min-vh-100">
-    <!-- MAIN WRAPPER (agar konten mendorong footer ke bawah) -->
     <div class="flex-grow-1">
       <!-- NAVBAR -->
       <nav
@@ -68,15 +73,15 @@
 
       <!-- MAIN CONTENT -->
       <div class="container py-4">
-        <!-- Header Title -->
+        <!-- Header -->
         <div class="d-flex align-items-center gap-3 mb-4">
           <div class="logo-box">YXF</div>
           <div>
             <h3 class="mb-0 fw-bold">Pelaporan Pemasukan Barang</h3>
-            <small class="text-muted"
-              >Upload beberapa file Excel, ekstrak, & gabungkan menjadi teks
-              siap salin.</small
-            >
+            <small class="text-muted">
+              Upload beberapa file Excel, ekstrak, & gabungkan menjadi teks siap
+              salin.
+            </small>
           </div>
         </div>
 
@@ -84,7 +89,7 @@
         <div class="card shadow-sm mb-4">
           <div class="card-body">
             <div class="row g-4">
-              <!-- Upload File -->
+              <!-- Upload -->
               <div class="col-md-6">
                 <label class="form-label fw-semibold"
                   >Pilih File Excel (.xlsx)</label
@@ -101,28 +106,75 @@
                 </div>
               </div>
 
-              <!-- Jenis + Tanggal -->
+              <!-- Right Column -->
               <div class="col-md-6">
                 <label class="form-label fw-semibold">Jenis Barang</label>
-                <select class="form-select" id="jenisBarang">
-                  <option value="">Pilih Jenis Barang</option>
-                  <option value="Insole">INSOLE</option>
-                  <option value="Eva Footbed">EVA FOOTBED</option>
-                  <option value="Textile">TEXTILE</option>
-                  <option value="PU ORTHOLITE">PU ORTHOLITE</option>
-                  <option value="Logo">LOGO</option>
-                  <option value="Kemasan">KEMASAN</option>
-                </select>
 
-                <label class="form-label fw-semibold mt-3">Tanggal Masuk</label>
-                <input type="date" class="form-control" id="masukTgl" />
+                <select id="jenisBarang" class="form-select" multiple></select>
+
+                <!-- Tambah Jenis Barang -->
+                <div class="input-group input-group-md mt-2">
+                  <input
+                    type="text"
+                    id="newJenisBarang"
+                    class="form-control me-3"
+                    placeholder="Type here.."
+                  />
+                  <button class="btn-tambah" id="addJenisBtn">+</button>
+                </div>
+
+                <!-- Row Horizontal -->
+                <div class="row mt-3">
+                  <div class="col-md-4" id="colTanggal">
+                    <label
+                      class="form-label fw-semibold mt-3"
+                      id="labelTanggal"
+                    ></label>
+                    <input type="date" class="form-control" id="masukTgl" />
+                  </div>
+
+                  <div class="col-md-4 mt-3" id="colJenisBC">
+                    <label class="form-label fw-semibold">Jenis Laporan</label>
+                    <select class="form-select" id="jenisBC">
+                      <option value="Keluar" selected>BC 2.7 Keluar</option>
+                      <option value="Masuk">BC 2.7 Masuk</option>
+                    </select>
+                  </div>
+
+                  <div class="col-md-4 mt-3" id="statusJalurWrap">
+                    <label class="form-label fw-semibold">Status Jalur</label>
+                    <select class="form-select" id="statusJalur">
+                      <option value="Hijau" selected>Hijau</option>
+                      <option value="Merah">Merah</option>
+                      <option value="Kuning">Kuning</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- 🔴 TAMBAHAN: PENANDAAN JALUR MANUAL -->
+                <div class="mt-3" id="jalurOverrideWrap">
+                  <label class="form-label fw-semibold">
+                    Penandaan Jalur
+                  </label>
+                  <textarea
+                    id="jalurOverride"
+                    class="form-control mb-1"
+                  ></textarea>
+                  <small class="text-muted">
+                    <b>
+                      *JALUR = NOPEN (MERAH = 123456, 654321)<br />
+                      *JALUR = NOPEN (KUNING = 123456, 654321)<br />
+                    </b>
+                  </small>
+                </div>
+                <!-- 🔴 END TAMBAHAN -->
               </div>
             </div>
 
             <!-- Buttons -->
             <div class="d-flex justify-content-end mt-4">
               <button id="processBtn" class="btn btn-primary me-2">
-                Porses
+                Proses
               </button>
               <button id="clearBtn" class="btn btn-outline-primary">
                 Reset
@@ -131,15 +183,15 @@
           </div>
         </div>
 
-        <!-- PREVIEW TABLE -->
+        <!-- PREVIEW -->
         <div id="tableWrap" class="card shadow-sm mb-4 d-none">
           <div class="card-body">
             <h5 class="fw-bold mb-3">📋 Preview Data</h5>
-
             <div class="table-responsive" style="max-height: 420px">
               <table class="table table-striped table-sm">
                 <thead class="table-primary">
                   <tr>
+                    <th>No</th>
                     <th>Jenis Transaksi</th>
                     <th>Nomor Aju</th>
                     <th>Pengirim</th>
@@ -166,7 +218,6 @@
               class="form-control"
               rows="6"
             ></textarea>
-
             <div class="d-flex justify-content-end mt-3">
               <button id="copyBtn" class="btn btn-primary">
                 📋 Copy To Clipboard
@@ -177,12 +228,147 @@
       </div>
     </div>
 
-    <!-- FOOTER (sticky) -->
+    <!-- FOOTER -->
     <footer class="py-3 text-center mt-auto">
       © 2025 YXF Tools — All rights reserved | Made with 💡 by YF
     </footer>
 
+    <!-- JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+    <script>
+      // ===============================
+      // JENIS BARANG - LOCAL STORAGE
+      // ===============================
+      const JENIS_BARANG_KEY = "yxf_jenis_barang";
+
+      function initJenisBarang() {
+        if (!localStorage.getItem(JENIS_BARANG_KEY)) {
+          const defaultJenis = [
+            "INSOLE",
+            "EVA FOOTBED",
+            "TEXTILE",
+            "PU ORTHOLITE",
+            "LOGO",
+            "KEMASAN",
+          ];
+          localStorage.setItem(JENIS_BARANG_KEY, JSON.stringify(defaultJenis));
+        }
+      }
+
+      function renderJenisBarangOptions() {
+        const select = document.getElementById("jenisBarang");
+        select.innerHTML = "";
+
+        const data = JSON.parse(localStorage.getItem(JENIS_BARANG_KEY) || "[]");
+
+        data.forEach((item) => {
+          const opt = document.createElement("option");
+          opt.value = item;
+          opt.textContent = item;
+          select.appendChild(opt);
+        });
+      }
+
+      // ===== INIT SEQUENCE (URUTAN WAJIB) =====
+      initJenisBarang();
+      renderJenisBarangOptions();
+
+      const jenisBarangSelect = new Choices("#jenisBarang", {
+        removeItemButton: true,
+        searchEnabled: true,
+        placeholderValue: "Pilih jenis barang",
+        searchPlaceholderValue: "Cari barang...",
+        shouldSort: false,
+      });
+
+      // ===============================
+      // TAMBAH JENIS BARANG
+      // ===============================
+      document.getElementById("addJenisBtn").addEventListener("click", () => {
+        const input = document.getElementById("newJenisBarang");
+        const value = input.value.trim().toUpperCase();
+        if (!value) return;
+
+        let data = JSON.parse(localStorage.getItem(JENIS_BARANG_KEY) || "[]");
+
+        if (data.includes(value)) {
+          Swal.fire({
+            icon: "warning",
+            text: "Jenis barang sudah ada!",
+          });
+          return;
+        }
+
+        // simpan ke localStorage
+        data.push(value);
+        localStorage.setItem(JENIS_BARANG_KEY, JSON.stringify(data));
+
+        // tambahkan ke dropdown + auto pilih
+        jenisBarangSelect.setChoices(
+          [{ value, label: value, selected: true }],
+          "value",
+          "label",
+          false
+        );
+
+        input.value = "";
+      });
+
+      // ENTER = TAMBAH
+      document
+        .getElementById("newJenisBarang")
+        .addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            document.getElementById("addJenisBtn").click();
+          }
+        });
+
+      // ===============================
+      // LOGIC LAMA (TIDAK DIUBAH)
+      // ===============================
+      function toggleStatusJalur() {
+        const jenisBC = document.getElementById("jenisBC").value;
+
+        const wrapJalur = document.getElementById("statusJalurWrap");
+        const wrapOverride = document.getElementById("jalurOverrideWrap");
+        const colTanggal = document.getElementById("colTanggal");
+        const colJenisBC = document.getElementById("colJenisBC");
+        const labelTanggal = document.getElementById("labelTanggal");
+
+        if (jenisBC === "Masuk") {
+          labelTanggal.textContent = "Tanggal Masuk";
+
+          wrapJalur.style.display = "none";
+          wrapOverride.style.display = "none";
+
+          colTanggal.classList.remove("col-md-4");
+          colJenisBC.classList.remove("col-md-4");
+
+          colTanggal.classList.add("col-md-6");
+          colJenisBC.classList.add("col-md-6");
+        } else {
+          labelTanggal.textContent = "Tanggal Keluar";
+
+          wrapJalur.style.display = "";
+          wrapOverride.style.display = "";
+
+          colTanggal.classList.remove("col-md-6");
+          colJenisBC.classList.remove("col-md-6");
+
+          colTanggal.classList.add("col-md-4");
+          colJenisBC.classList.add("col-md-4");
+        }
+      }
+
+      document
+        .getElementById("jenisBC")
+        .addEventListener("change", toggleStatusJalur);
+
+      toggleStatusJalur();
+    </script>
   </body>
 </html>

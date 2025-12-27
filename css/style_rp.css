@@ -92,8 +92,16 @@ body::-webkit-scrollbar {
   font-weight: 600;
 }
 
-.btn-primary:hover {
+.btn-primary:hover,
+.btn-tambah:hover {
   background: #1e4f91 !important;
+}
+.btn-tambah {
+  background-color: var(--bs-dark);
+  color: #fff;
+  border-color: var(--bs-dark) !important;
+  font-weight: 600;
+  width: 40px;
 }
 
 .btn-outline-primary {
@@ -127,6 +135,7 @@ textarea.form-control {
   height: 260px;
   border: 1px solid #e6eef9 !important;
   background: #fdfdff;
+  cursor: text;
 }
 
 /* FOOTER */
@@ -251,4 +260,24 @@ input[type="date"] {
 
 input[type="date"]::-webkit-calendar-picker-indicator {
   cursor: pointer;
+}
+/* Badge item terpilih */
+.choices__list--multiple .choices__item {
+  background-color: #1b2a49; /* warna utama */
+  border-color: #1b2a49;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* Hover badge */
+.choices__list--multiple .choices__item:hover {
+  background-color: #243a66;
+  border-color: #243a66;
+}
+#jalurOverride {
+  height: 60px; /* atau berapa pixel yang kamu inginkan */
+  resize: vertical; /* optional: cuma bisa resize vertikal */
+}
+#newJenisBarang::placeholder {
+  color: var(--muted);
 }

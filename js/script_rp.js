@@ -44,14 +44,15 @@ function getCell(wb, sheet, addr) {
 }
 
 // ---------- ambil nama entitas ----------
-function getEntitas(wb) {
+function getEntitas(wb, targetKodeEntitas) {
   const s = wb.Sheets["ENTITAS"];
   if (!s) return "";
+
   const data = XLSX.utils.sheet_to_json(s, { header: 1 });
   if (!data.length) return "";
 
-  let kodeIdx = -1,
-    namaIdx = -1;
+  let kodeIdx = -1;
+  let namaIdx = -1;
 
   for (let i = 0; i < data[0].length; i++) {
     const val = String(data[0][i] || "")
@@ -62,8 +63,8 @@ function getEntitas(wb) {
   }
 
   for (let r = 1; r < data.length; r++) {
-    const kode = data[r][kodeIdx];
-    if (kode === 3 || String(kode).trim() === "3") {
+    const kode = String(data[r][kodeIdx] || "").trim();
+    if (kode === String(targetKodeEntitas)) {
       return String(data[r][namaIdx] || "").trim();
     }
   }
@@ -72,7 +73,9 @@ function getEntitas(wb) {
 
 // ---------- ekstraksi data utama dari workbook ----------
 function extractDataFromWorkbook(file, wb) {
-  const pengirim = getEntitas(wb);
+  const jenisBC = document.getElementById("jenisBC").value;
+  const kodeEntitas = jenisBC === "Keluar" ? 8 : 3;
+  const pengirim = getEntitas(wb, kodeEntitas);
   const bc = getCell(wb, "HEADER", "CP2") || "";
   const segel = getCell(wb, "HEADER", "BC2") || "";
 
@@ -228,8 +231,9 @@ function renderPreview(dataArr) {
   const tbody = $("previewTableBody");
   tbody.innerHTML = dataArr
     .map(
-      (d) => `
+      (d, idx) => `
       <tr>
+        <td>${idx + 1}</td>
         <td>${d.jenistrx}</td>
         <td>${d.aju}</td>
         <td>${d.pengirim}</td>
@@ -248,25 +252,60 @@ function renderPreview(dataArr) {
 
   $("tableWrap").classList.remove("d-none");
 }
+// Helper
+function getSelectedValues(selectId) {
+  return Array.from($(selectId).selectedOptions).map((o) => o.value);
+}
+function formatKeyValue(map) {
+  return Object.entries(map)
+    .map(([u, q]) => `${fmtNum(q)} ${u}`)
+    .join(" + ");
+}
+function parseJalurOverride(text) {
+  const map = {};
+  text
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .forEach((line) => {
+      const [jalur, list] = line.split("=");
+      if (!jalur || !list) return;
+
+      list.split(",").forEach((no) => {
+        map[no.trim()] = jalur.trim().toUpperCase();
+      });
+    });
+  return map;
+}
 
 // ---------- generate result text ----------
 function generateResultText(dataArr) {
+  const jenisBC = $("jenisBC").value;
+  const jalurOverrideMap = parseJalurOverride($("jalurOverride")?.value || "");
+  const jenisBarangArr = getSelectedValues("jenisBarang");
+  const jenisBarang = jenisBarangArr.join(" + ");
+  const masukTxt = fmtDate(new Date($("masukTgl").value));
+
   const pengirim = [
     ...new Set(dataArr.map((d) => d.pengirim).filter(Boolean)),
   ].join(" | ");
 
-  const jenisBarang = $("jenisBarang").value;
-  const masukTxt = fmtDate(new Date($("masukTgl").value));
-
-  const bcByJenis = {};
+  const bcList = {};
   const segelList = [];
   const kemasanMap = {};
   const barangMap = {};
   const tanggalArr = [];
+  const bcGrouped = {};
 
   dataArr.forEach((d) => {
-    if (!bcByJenis[d.jenistrx]) bcByJenis[d.jenistrx] = [];
-    if (d.bc) bcByJenis[d.jenistrx].push(d.bc);
+    const jalur = jalurOverrideMap[d.bc] || jalurOverrideMap[d.aju] || "HIJAU";
+
+    const key = `${jalur} | ${d.jenistrx}`;
+    if (!bcGrouped[key]) bcGrouped[key] = [];
+    if (d.bc) bcGrouped[key].push(d.bc);
+
+    if (!bcList[d.jenistrx]) bcList[d.jenistrx] = [];
+    if (d.bc) bcList[d.jenistrx].push(d.bc);
     if (d.segel) segelList.push(d.segel);
 
     for (const [u, q] of Object.entries(d.kemasan))
@@ -278,22 +317,48 @@ function generateResultText(dataArr) {
     if (d.tanggal) tanggalArr.push(d.tanggal);
   });
 
+  // ================================
+  // FORMAT KHUSUS 2.7 KELUAR
+  // ================================
+  if (jenisBC === "Keluar") {
+    const totalDokumen = dataArr.length;
+    const labelTanggal =
+      jenisBC === "Masuk" ? "Tanggal Masuk" : "Tanggal Keluar";
+
+    const bcLines = Object.entries(bcGrouped)
+      .map(([key, list]) => `BC 2.7 (${key}) : ${list.join(", ")}`)
+      .join("\n");
+
+    return [
+      `*BC 2.7 Keluar*`,
+      `Customer : ${pengirim}`,
+      bcLines,
+      `No. Segel : ${segelList.join(", ") || ""}`,
+      `Jumlah Dokumen : ${totalDokumen} Dokumen`,
+      `Jenis Barang : ${jenisBarang}`,
+      `Jumlah Barang : ${formatKeyValue(barangMap)}`,
+      `Kemasan : ${formatKeyValue(kemasanMap)}`,
+      `${labelTanggal} : ${masukTxt}`,
+    ].join("\n");
+  }
+
+  // ================================
+  // FORMAT LAMA (MASUK)
+  // ================================
+  const labelTanggal = jenisBC === "Masuk" ? "Tanggal Masuk" : "Tanggal Keluar";
+
   return [
-    "*BC 2.7 Masuk*",
-    `Pengirim : ${pengirim}`,
-    ...Object.entries(bcByJenis).map(
+    `*BC 2.7 ${jenisBC}*`,
+    `Supplier : ${pengirim}`,
+    ...Object.entries(bcList).map(
       ([j, l]) => `No BC 2.7 ( ${j} ) : ${l.join(", ")}`
     ),
     `No Segel : ${segelList.join(", ")}`,
     `Jenis Barang : ${jenisBarang}`,
-    `Jumlah kemasan : ${Object.entries(kemasanMap)
-      .map(([u, q]) => `${fmtNum(q)} ${u}`)
-      .join(" + ")}`,
-    `Jumlah barang : ${Object.entries(barangMap)
-      .map(([u, q]) => `${fmtNum(q)} ${u}`)
-      .join(" + ")}`,
+    `Jumlah barang : ${formatKeyValue(barangMap)}`,
+    `Jumlah kemasan : ${formatKeyValue(kemasanMap)}`,
     `Tanggal Dokumen : ${formatTanggalDokumen(tanggalArr)}`,
-    `Masuk Tgl : ${masukTxt}`,
+    `${labelTanggal} : ${masukTxt}`,
   ].join("\n");
 }
 
@@ -316,10 +381,10 @@ $("processBtn").addEventListener("click", async () => {
   if (!selectedFiles.length)
     return Swal.fire({ icon: "error", text: "Pilih minimal 1 file Excel!" });
 
-  if (!$("jenisBarang").value)
+  if (!getSelectedValues("jenisBarang").length)
     return Swal.fire({
       icon: "error",
-      text: "Pilih jenis barang terlebih dahulu!",
+      text: "Pilih minimal 1 jenis barang!",
     });
 
   $("processBtn").disabled = true;
