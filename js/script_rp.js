@@ -108,10 +108,10 @@ function extractDataFromWorkbook(file, wb) {
     }
   }
 
-  // ---- BARANG (LOGIKA BARU, TANPA MENGHAPUS OUTPUT LAMA) ----
-  let barangMap = {}; // multi satuan
-  let barangTotal = 0; // total legacy
-  let barangUnit = ""; // legacy (diisi jika hanya satu satuan)
+  // ---- BARANG ----
+  let barangMap = {};
+  let barangTotal = 0;
+  let barangUnit = "";
   let namaBarang = [];
 
   const sheetBarang = wb.Sheets["BARANG"];
@@ -182,9 +182,9 @@ function extractDataFromWorkbook(file, wb) {
     segel,
     kemasan: kemasanMap,
     barang: {
-      map: barangMap, // BARU (multi satuan)
-      total: barangTotal, // LAMA (tidak dihapus)
-      unit: barangUnit, // LAMA (tidak dihapus)
+      map: barangMap,
+      total: barangTotal,
+      unit: barangUnit,
     },
     tanggal: t ? new Date(t) : null,
     namaBarang: [...new Set(namaBarang)],
@@ -281,11 +281,19 @@ function parseJalurOverride(text) {
 // ---------- generate result text ----------
 function generateResultText(dataArr) {
   const jenisBC = $("jenisBC").value;
+
+  // Ambil nilai dropdown sebagai default jalur
+  const defaultJalur = $("statusJalur")?.value || "HIJAU";
+
+  // Ambil override per BC / No Aju dari textarea
   const jalurOverrideMap = parseJalurOverride($("jalurOverride")?.value || "");
+
+  // Ambil jenis barang yang dipilih
   const jenisBarangArr = getSelectedValues("jenisBarang");
   const jenisBarang = jenisBarangArr.join(" + ");
   const masukTxt = fmtDate(new Date($("masukTgl").value));
 
+  // Ambil list pengirim unik
   const pengirim = [
     ...new Set(dataArr.map((d) => d.pengirim).filter(Boolean)),
   ].join(" | ");
@@ -297,9 +305,15 @@ function generateResultText(dataArr) {
   const tanggalArr = [];
   const bcGrouped = {};
 
+  // ===============================
+  // Proses tiap data
+  // ===============================
   dataArr.forEach((d) => {
-    const jalur = jalurOverrideMap[d.bc] || jalurOverrideMap[d.aju] || "HIJAU";
+    // Jalur = override per BC/No Aju, kalau tidak ada pakai dropdown
+    const jalur =
+      jalurOverrideMap[d.bc] || jalurOverrideMap[d.aju] || defaultJalur;
 
+    // Key gabungan Jalur + Jenis Transaksi
     const key = `${jalur} | ${d.jenistrx}`;
     if (!bcGrouped[key]) bcGrouped[key] = [];
     if (d.bc) bcGrouped[key].push(d.bc);
@@ -322,11 +336,18 @@ function generateResultText(dataArr) {
   // ================================
   if (jenisBC === "Keluar") {
     const totalDokumen = dataArr.length;
-    const labelTanggal =
-      jenisBC === "Masuk" ? "Tanggal Masuk" : "Tanggal Keluar";
+    const labelTanggal = "Tanggal Keluar";
 
-    const bcLines = Object.entries(bcGrouped)
-      .map(([key, list]) => `BC 2.7 (${key}) : ${list.join(", ")}`)
+    // Urutan jalur: Hijau → Merah → Kuning
+    const jalurOrder = { HIJAU: 1, MERAH: 2, KUNING: 3 };
+    const sortedKeys = Object.keys(bcGrouped).sort((a, b) => {
+      const jalurA = a.split("|")[0].trim().toUpperCase();
+      const jalurB = b.split("|")[0].trim().toUpperCase();
+      return (jalurOrder[jalurA] || 99) - (jalurOrder[jalurB] || 99);
+    });
+
+    const bcLines = sortedKeys
+      .map((key) => `BC 2.7 (${key}) : ${bcGrouped[key].join(", ")}`)
       .join("\n");
 
     return [
@@ -343,9 +364,9 @@ function generateResultText(dataArr) {
   }
 
   // ================================
-  // FORMAT LAMA (MASUK)
+  // FORMAT KHUSUS BC 2.7 MASUK
   // ================================
-  const labelTanggal = jenisBC === "Masuk" ? "Tanggal Masuk" : "Tanggal Keluar";
+  const labelTanggal = "Tanggal Masuk";
 
   return [
     `*BC 2.7 ${jenisBC}*`,
